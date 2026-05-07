@@ -1,9 +1,8 @@
-import { Bot, Gauge, Sparkles } from "lucide-react";
+import { Gauge, Sparkles } from "lucide-react";
 
 const items = [
   { id: "dashboard", label: "Dashboard", icon: Gauge },
-  { id: "simulation", label: "Simulation", icon: Sparkles },
-  { id: "chat", label: "Chat", icon: Bot }
+  { id: "simulation", label: "Simulation", icon: Sparkles }
 ];
 
 export default function Nav({ active, onChange }) {
@@ -17,7 +16,7 @@ export default function Nav({ active, onChange }) {
             <p className="text-xs text-slate-500">FinScope Edition</p>
           </div>
         </div>
-        <div className="grid w-full grid-cols-3 gap-2 md:w-auto md:flex">
+        <div className="grid w-full grid-cols-2 gap-2 md:w-auto md:flex">
           {items.map((item) => {
             const Icon = item.icon;
             const selected = active === item.id;

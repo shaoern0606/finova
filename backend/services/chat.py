@@ -1,12 +1,14 @@
 import os
 import json
+from dotenv import load_dotenv
 import google.generativeai as genai
 from services.forecast import savings_forecast
 from services.loan import evaluate_loan
 from services.prediction import evaluate_purchase
 
+load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 def llama_style_response(message, context, history=None):
     summary = context["summary"]
@@ -24,10 +26,9 @@ You are Nova, a professional financial advisor AI for FINMATE OS.
 
 Your role:
 
-- Give clear, data-driven financial advice
-- Use the provided financial context
-- Be cautious with risky decisions
-- Stay concise and structured
+- Give clear, statistical financial advice using percentages, ratios, and projections.
+- Use the provided context to calculate the mathematical impact of decisions.
+- Be extremely concise. Get straight to the numbers and facts.
 
 CONTEXT:
 
@@ -53,13 +54,13 @@ USER QUERY:
 
 INSTRUCTIONS:
 
-- Use context to personalize advice
+- Always explain your reasoning using statistics (e.g., impact on daily average, savings percentage, or debt ratio).
 
-- If user suggests risky spending, warn clearly
+- Keep the response extremely concise and strictly data-focused. 
 
-- If unsure, make a reasonable assumption (do NOT mention "simulated research")
+- If the user suggests risky spending, warn clearly with mathematical projections.
 
-- Keep response practical and actionable
+- If unsure, make a reasonable assumption (do NOT mention "simulated research").
 
 - DO NOT include markdown or explanation outside JSON
 
@@ -84,17 +85,15 @@ Respond ONLY in valid JSON:
 """
 
     try:
-        response = model.generate_content(prompt)
+        response = model.generate_content(
+            prompt,
+            generation_config={"response_mime_type": "application/json"}
+        )
         text_response = response.text.strip()
-        # Clean potential markdown
-        if "```json" in text_response:
-            text_response = text_response.split("```json")[1].split("```")[0].strip()
-        elif "```" in text_response:
-            text_response = text_response.split("```")[1].split("```")[0].strip()
-            
         result = json.loads(text_response)
         return result
     except Exception as e:
+        print(f"Gemini Error: {e}")
         # Fallback to original logic if API fails
         text = message.lower()
         if "rm10" in text or "10 daily" in text or "save" in text:

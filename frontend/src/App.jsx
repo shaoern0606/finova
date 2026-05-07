@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, post } from "./api.js";
+import FloatingChat from "./components/FloatingChat.jsx";
 import Nav from "./components/Nav.jsx";
-import Chat from "./pages/Chat.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Simulation from "./pages/Simulation.jsx";
 
@@ -30,11 +30,11 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6fbf8] pb-20 md:pb-0">
+    <div className="min-h-screen bg-[#f6fbf8] pb-20 md:pb-0 relative">
       <Nav active={page} onChange={setPage} />
       {page === "dashboard" && <Dashboard data={data} onDemoSalary={demoSalary} onDemoOverspend={demoOverspend} demoResult={demoResult} />}
       {page === "simulation" && <Simulation data={data} />}
-      {page === "chat" && <Chat />}
+      <FloatingChat />
     </div>
   );
 }
