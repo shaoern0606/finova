@@ -22,19 +22,19 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
   const [showNewGoal, setShowNewGoal] = useState(false);
   const [newGoalName, setNewGoalName] = useState("");
   const [newGoalTarget, setNewGoalTarget] = useState("");
-  
+
   // Goal Edit State
   const [editingGoal, setEditingGoal] = useState(null);
   const [editGoalName, setEditGoalName] = useState("");
   const [editGoalTarget, setEditGoalTarget] = useState("");
-  
+
   // New Goal State
   const [isAddingGoal, setIsAddingGoal] = useState(false);
   const [addGoalName, setAddGoalName] = useState("");
   const [addGoalTarget, setAddGoalTarget] = useState("");
   const [addGoalDate, setAddGoalDate] = useState("");
   const [addGoalCategory, setAddGoalCategory] = useState("General");
-  
+
   // Smart Map Filter State
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [mapMode, setMapMode] = useState(false);
@@ -57,7 +57,7 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
         };
       });
     }
-    
+
     setEditingGoal(null);
 
     // Background sync to backend
@@ -90,18 +90,18 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
       target_date: deadline || "",
       category: category || "General"
     };
-    
+
     if (onDataUpdate) {
       onDataUpdate(prev => {
         if (!prev) return prev;
         // Strict rule: ALWAYS append, NEVER overwrite
-        return { 
-          ...prev, 
-          goals: [...(prev.goals || []), newGoal] 
+        return {
+          ...prev,
+          goals: [...(prev.goals || []), newGoal]
         };
       });
     }
-    
+
     // Close modal and reset fields
     setIsAddingGoal(false);
     setAddGoalName("");
@@ -111,13 +111,13 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
 
     // Background sync to backend
     try {
-      const result = await post("/goals", { 
-        name: name, 
+      const result = await post("/goals", {
+        name: name,
         target_amount: target,
         target_date: deadline,
         category: category
       });
-      
+
       // Update the temp ID with the real ID from backend
       if (onDataUpdate) {
         onDataUpdate(prev => {
@@ -197,7 +197,7 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
       target_date: "",
       category: "General"
     };
-    
+
     if (onDataUpdate) {
       onDataUpdate(prev => {
         if (!prev) return prev;
@@ -215,8 +215,8 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
 
     // Background sync
     try {
-      const result = await post("/goals", { 
-        name: name, 
+      const result = await post("/goals", {
+        name: name,
         target_amount: target,
         target_date: "",
         category: "General"
@@ -253,7 +253,7 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
 
     // Optimistic: inject transaction into local data immediately
     const finalAllocations = manualType === "savings" ? goalAllocations.filter(g => g.allocatedAmount > 0) : [];
-    
+
     const tempTx = {
       id: `tx_opt_${Date.now()}`,
       date: today,
@@ -333,29 +333,36 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
 
 
   return (
-    <main className="mx-auto max-w-6xl space-y-5 px-4 py-5">
-      <section className="rounded-lg bg-gx-900 p-5 text-white shadow-soft">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-emerald-200">Open finance intelligence</p>
-            <h1 className="mt-1 text-3xl font-black">Hi {data.user.name}, your money graph is live.</h1>
-            <p className="mt-2 max-w-2xl text-sm text-emerald-50">
-              GXBank, e-wallet, loans, goals, peer comparison, and simulated Graph RAG reasoning in one operating view.
-            </p>
-          </div>
-          <div className="flex gap-2 flex-wrap justify-end">
-            <button onClick={() => setMapMode(!mapMode)} className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-bold shadow-md transition-colors ${mapMode ? "bg-red-500 text-white" : "bg-gx-500 text-white"}`}>
-              <MapPin size={18} /> {mapMode ? "Exit Map Mode" : "Map Mode"}
+    <main className="space-y-3 px-6 pt-10 pb-4 overflow-x-hidden">
+      {/* Hero */}
+      <section className="rounded-2xl bg-gx-900 p-5 text-white relative overflow-hidden">
+        <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-emerald-500/15 blur-2xl" />
+        <div className="relative z-10">
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400">FinMate Intelligence</p>
+          <h1 className="mt-1 text-xl font-black leading-tight">Hi {data.user.name} 👋</h1>
+          <p className="text-[11px] text-emerald-100/70 mt-1">Your financial graph is live.</p>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => setMapMode(!mapMode)}
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold transition-all active:scale-95 ${mapMode ? "bg-red-500 text-white" : "bg-white/15 text-white border border-white/20"
+                }`}
+            >
+              <MapPin size={13} /> {mapMode ? "Exit Map" : "Map"}
             </button>
-            <button onClick={handleResetData} className="rounded-lg border-2 border-red-400 bg-transparent px-4 py-3 text-sm font-bold text-red-400 hover:bg-red-400 hover:text-white transition-all">Reset Demo Data</button>
+            <button
+              onClick={handleResetData}
+              className="flex-1 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-[11px] font-bold text-white/80 active:scale-95"
+            >
+              Reset Data
+            </button>
           </div>
         </div>
       </section>
 
-      {demoResult && <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">{demoResult}</div>}
+      {demoResult && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-900">{demoResult}</div>}
 
       {mapMode ? (
-        <section className="h-[75vh] w-full rounded-2xl overflow-hidden border border-slate-200 shadow-xl bg-white relative animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <section className="h-[65vh] w-full rounded-2xl overflow-hidden border border-slate-200 shadow-lg bg-white relative">
           <SmartMap
             recommendations={data.recommendations}
             location={userLocation}
@@ -367,187 +374,168 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
         </section>
       ) : (
         <>
-          <section className="grid gap-4 md:grid-cols-4 animate-in fade-in duration-300">
-        <Card title="Combined Balance" value={money(data.balance.assets)} />
-        <Card title="Net Worth" value={money(data.balance.net_worth)} accent={data.balance.net_worth < 0 ? "text-red-600" : "text-gx-900"} />
-        <Card title="Total Spending" value={money(data.summary.total_spending)} />
-        <Card title="Daily Average" value={money(data.summary.daily_average)} />
-      </section>
+          {/* Balance Cards — 2x2 grid */}
+          <section className="grid grid-cols-2 gap-2">
+            <Card title="Balance" value={money(data.balance.assets)} />
+            <Card title="Net Worth" value={money(data.balance.net_worth)} accent={data.balance.net_worth < 0 ? "text-red-600" : "text-gx-900"} />
+            <Card title="Spending" value={money(data.summary.total_spending)} />
+            <Card title="Daily Avg" value={money(data.summary.daily_average)} />
+          </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
-        <Card>
-          <ScoreRing data={data.score} />
-          <div className="mt-4 flex flex-wrap gap-3 text-sm justify-center">
-            <span className="chip">Risk: {data.behavior.classification}</span>
-            <span className="chip">Low balance in {data.prediction.days_until_low_balance} days</span>
-          </div>
-        </Card>
-        <Card title="Predictive Alerts">
-          <div className="mt-3 space-y-3">
-            <div className="flex gap-3 rounded-lg bg-red-50 p-3 text-sm text-red-900 border border-red-100">
-              <AlertTriangle size={18} className="shrink-0" />
-              <div>
-                <p className="font-bold">Overspending Risk</p>
-                <p>Projection: {money(data.prediction.monthly_spend_projection)} — {data.prediction.overspending_risk}</p>
-              </div>
+          {/* Score + Risk Chips */}
+          <Card>
+            <ScoreRing data={data.score} />
+            <div className="mt-3 flex flex-wrap gap-2 justify-center">
+              <span className="chip text-[10px]">Risk: {data.behavior.classification}</span>
+              <span className="chip text-[10px]">Low balance in {data.prediction.days_until_low_balance}d</span>
             </div>
-            <div className="grid gap-2">
+          </Card>
+
+          {/* Predictive Alerts */}
+          <Card title="Predictive Alerts">
+            <div className="mt-2 space-y-2">
+              <div className="flex gap-2 rounded-xl bg-red-50 p-3 text-xs text-red-900 border border-red-100">
+                <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="font-bold text-[11px]">Overspending Risk</p>
+                  <p className="text-[10px] mt-0.5">{money(data.prediction.monthly_spend_projection)} projected — {data.prediction.overspending_risk}</p>
+                </div>
+              </div>
               {warnings.map((item) => (
-                <div key={item.category} className="rounded-lg bg-emerald-50 p-2.5 text-xs text-gx-900 border border-emerald-100">
-                  <span className="font-black uppercase tracking-wider text-[9px] text-gx-600 block mb-0.5">{item.category}</span>
-                  {item.warning} {item.suggestion}
+                <div key={item.category} className="rounded-xl bg-emerald-50 p-2.5 text-[10px] text-gx-900 border border-emerald-100">
+                  <span className="font-black uppercase tracking-wider text-[8px] text-gx-600 block mb-0.5">{item.category}</span>
+                  <span className="leading-tight">{item.warning} {item.suggestion}</span>
                 </div>
               ))}
             </div>
-          </div>
-        </Card>
-      </section>
+          </Card>
 
-      <section className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-        <Card title="Spending Mix">
-          <div className="h-[300px] flex items-center justify-center">
+          {/* Spending Mix */}
+          <Card title="Spending Mix">
             <SpendingPie breakdown={data.summary.category_breakdown} />
-          </div>
-        </Card>
+          </Card>
 
-        {/* Hierarchical drill-down analytics */}
-        <Card>
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h2 className="text-lg font-black text-gx-900">Spending Intelligence</h2>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Hierarchical breakdown</p>
-            </div>
-            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">Interactive</span>
-          </div>
-          
-          <HierarchicalBreakdown
-            mainBreakdown={data.summary.category_breakdown}
-            subBreakdown={data.summary.sub_category_breakdown || {}}
-          />
-          
-          {data.summary.behavioral_insights?.length > 0 && (
-            <div className="mt-6 pt-4 border-t border-slate-100">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Behavioral AI Patterns</p>
-              <BehavioralInsights
-                insights={data.summary.behavioral_insights || []}
-                tagCounts={data.summary.behavioral_tag_counts || {}}
-              />
-            </div>
-          )}
-        </Card>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <Card title="Active Loans">
-          <div className="mt-3 space-y-3">
-            {data.loans.map((loan) => (
-              <div key={loan.id} className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
-                <Landmark className="text-gx-600" size={20} />
-                <div>
-                  <p className="font-bold">{loan.name}</p>
-                  <p className="text-sm text-slate-600">{money(loan.outstanding)} outstanding, {loan.remaining_months} months left</p>
-                </div>
+          {/* Spending Intelligence */}
+          <Card>
+            <div className="flex items-center justify-between mb-2">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-black text-gx-900">Spending Intelligence</h2>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Tap category to drill down</p>
               </div>
-            ))}
-          </div>
-        </Card>
-        <Card title="Savings Goals">
-          <div className="absolute top-4 right-4">
-            <button onClick={() => setIsAddingGoal(true)} className="p-1 rounded-md text-emerald-600 hover:bg-emerald-50 transition">
-              <Plus size={18} />
-            </button>
-          </div>
-          <div className="mt-3 space-y-3">
-            {data.goals.map((goal) => (
-              <div key={goal.id} className="rounded-lg bg-emerald-50 p-3 group relative cursor-pointer hover:bg-emerald-100 transition" onClick={() => {
-                setEditingGoal(goal);
-                setEditGoalName(goal.name);
-                setEditGoalTarget(goal.target_amount);
-              }}>
-                <div className="flex items-center gap-2 font-bold"><Goal size={17} />{goal.name}</div>
-                <div className="mt-2 h-2 rounded-full bg-white">
-                  <div className="h-2 rounded-full bg-gx-500" style={{ width: `${Math.min((goal.current_amount / goal.target_amount) * 100, 100)}%` }} />
-                </div>
-                <p className="mt-1 text-sm text-slate-600">{money(goal.current_amount)} / {money(goal.target_amount)}</p>
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-xs font-bold text-emerald-700 bg-white/50 px-2 rounded">Edit</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-        <Card title="Smart Automations">
-          <div className="mt-3 space-y-3">
-            <div className="rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900">
-              <b>Projection:</b> Saving {money(data.prediction.projected_monthly_savings)}/month based on current pace.
+              <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">Interactive</span>
             </div>
-            {data.automation.map((item, index) => (
-              <div key={index} className="flex gap-3 rounded-lg bg-slate-50 p-3 text-sm">
-                <BadgeCheck size={18} className="text-gx-600" />
-                <span>{item.message}</span>
+            <HierarchicalBreakdown
+              mainBreakdown={data.summary.category_breakdown}
+              subBreakdown={data.summary.sub_category_breakdown || {}}
+            />
+            {data.summary.behavioral_insights?.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-slate-100">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">AI Patterns</p>
+                <BehavioralInsights
+                  insights={data.summary.behavioral_insights || []}
+                  tagCounts={data.summary.behavioral_tag_counts || {}}
+                />
               </div>
-            ))}
-          </div>
-        </Card>
-      </section>
+            )}
+          </Card>
 
-
-
-      <section className="card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-black text-gx-900">Recent Transactions</h2>
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-gx-600 hover:bg-emerald-100 transition"
-          >
-            <Plus size={14} /> Add Manual
-          </button>
-        </div>
-        <div className="divide-y divide-slate-100">
-          {data.summary.transactions.length === 0 ? (
-            <div className="py-8 text-center text-slate-500 text-sm font-medium">No recent transactions yet. Add manual entries or scan a receipt to see them here.</div>
-          ) : (
-            data.summary.transactions.slice(0, 8).map((tx) => (
-              <div key={tx.id} className="flex items-center justify-between py-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold">{tx.merchant}</p>
-                    {tx.receipt_url && <Receipt size={14} className="text-emerald-500" title="Receipt saved" />}
-                    {tx.goalAllocation && tx.goalAllocation.length > 0 && (
-                      <span className="flex items-center gap-1 rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-600">
-                        <Target size={10} /> Goal
-                      </span>
-                    )}
+          {/* Loans, Goals, Automations — stacked */}
+          <Card title="Active Loans">
+            <div className="mt-2 space-y-2">
+              {data.loans.map((loan) => (
+                <div key={loan.id} className="flex items-center gap-2.5 rounded-xl bg-slate-50 p-3">
+                  <Landmark className="text-gx-600 shrink-0" size={18} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm truncate">{loan.name}</p>
+                    <p className="text-[10px] text-slate-500 truncate">{money(loan.outstanding)} · {loan.remaining_months}mo left</p>
                   </div>
-                  <p className="text-xs text-slate-500">
-                    {tx.source} · <span className="font-semibold text-slate-600">{tx.main_category || tx.category}</span>
-                    {tx.sub_category && ` › ${tx.sub_category}`} · {tx.date}
-                  </p>
-                  {tx.behavioral_tag && (
-                    <span className="inline-block mt-0.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
-                      {tx.behavioral_tag.replace(/_/g, " ")}
-                    </span>
-                  )}
                 </div>
-                <span className={`flex items-center gap-1 font-bold ${tx.amount < 0 ? "text-red-600" : "text-gx-600"}`}>
-                  {tx.amount < 0 && <ArrowDownRight size={15} />}
-                  {money(Math.abs(tx.amount))}
-                </span>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
+              ))}
+            </div>
+          </Card>
 
-      {/* Map Banner - always visible outside map mode */}
-      <section className="card p-4 flex justify-between items-center bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100">
-        <div>
-          <h2 className="text-lg font-black text-gx-900">Real-time Map Intelligence</h2>
-          <p className="text-sm text-slate-500">Discover cost-saving alternatives based on your spending habits.</p>
-        </div>
-        <button onClick={() => setMapMode(true)} className="rounded-xl bg-gx-500 px-5 py-3 font-bold text-white shadow-lg shadow-emerald-500/30 transition hover:-translate-y-0.5 whitespace-nowrap flex gap-2 items-center">
-          <MapPin size={18} /> Open Map
-        </button>
-      </section>
-      </>
+          <Card title="Savings Goals">
+            <div className="absolute top-3 right-3">
+              <button onClick={() => setIsAddingGoal(true)} className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition active:scale-90">
+                <Plus size={16} />
+              </button>
+            </div>
+            <div className="mt-2 space-y-2">
+              {data.goals.map((goal) => (
+                <div key={goal.id} className="rounded-xl bg-emerald-50 p-3 group relative cursor-pointer active:bg-emerald-100 transition" onClick={() => {
+                  setEditingGoal(goal);
+                  setEditGoalName(goal.name);
+                  setEditGoalTarget(goal.target_amount);
+                }}>
+                  <div className="flex items-center gap-2 font-bold text-sm"><Goal size={15} /><span className="truncate">{goal.name}</span></div>
+                  <div className="mt-1.5 h-1.5 rounded-full bg-white">
+                    <div className="h-1.5 rounded-full bg-gx-500" style={{ width: `${Math.min((goal.current_amount / goal.target_amount) * 100, 100)}%` }} />
+                  </div>
+                  <p className="mt-1 text-[10px] text-slate-600">{money(goal.current_amount)} / {money(goal.target_amount)}</p>
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-[10px] font-bold text-emerald-700 bg-white/60 px-2 rounded">Edit</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card title="Smart Automations">
+            <div className="mt-2 space-y-2">
+              <div className="rounded-xl bg-indigo-50 p-3 text-xs text-indigo-900">
+                <b>Projection:</b> {money(data.prediction.projected_monthly_savings)}/mo savings pace
+              </div>
+              {data.automation.map((item, index) => (
+                <div key={index} className="flex gap-2 rounded-xl bg-slate-50 p-3 text-xs">
+                  <BadgeCheck size={16} className="text-gx-600 shrink-0" />
+                  <span className="min-w-0">{item.message}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Recent Transactions */}
+          <section className="card p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-black text-gx-900">Recent Transactions</h2>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-gx-600 active:bg-emerald-100"
+              >
+                <Plus size={12} /> Add
+              </button>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {data.summary.transactions.length === 0 ? (
+                <div className="py-6 text-center text-slate-400 text-xs">No transactions yet.</div>
+              ) : (
+                data.summary.transactions.slice(0, 6).map((tx) => (
+                  <div key={tx.id} className="flex items-center justify-between py-2.5 gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="font-semibold text-sm truncate">{tx.merchant}</p>
+                        {tx.receipt_url && <Receipt size={12} className="text-emerald-500 shrink-0" />}
+                      </div>
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                        {tx.source} · {tx.main_category || tx.category} · {tx.date}
+                      </p>
+                    </div>
+                    <span className={`text-xs font-bold shrink-0 ${tx.amount < 0 ? "text-red-600" : "text-gx-600"}`}>
+                      {money(Math.abs(tx.amount))}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          {/* Map Banner */}
+          <section className="card p-4 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100">
+            <h2 className="text-sm font-black text-gx-900">Real-time Map Intelligence</h2>
+            <p className="text-[10px] text-slate-500 mt-0.5 mb-3">Discover cost-saving alternatives near you.</p>
+            <button onClick={() => setMapMode(true)} className="w-full rounded-xl bg-gx-500 px-4 py-2.5 text-xs font-bold text-white shadow-md active:scale-[0.98] flex gap-2 items-center justify-center">
+              <MapPin size={14} /> Open Map
+            </button>
+          </section>
+        </>
       )}
 
       {showAddModal && (
@@ -576,65 +564,65 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
 
               {/* Goal Allocation Section - ONLY for Savings type */}
               {manualType === "savings" && (
-              <div className="pt-2 border-t border-slate-100 animate-in slide-in-from-top-2 duration-200">
-                <label className="text-xs font-semibold text-slate-500 mb-2 block">Savings Goal Allocation</label>
-                <div className="space-y-2">
-                  {goalAllocations.map((alloc, index) => (
-                    <div key={index} className="flex gap-2 items-center bg-slate-50 p-2 rounded-lg border border-slate-200">
-                      <Target size={14} className="text-gx-500" />
-                      <span className="flex-1 text-xs font-semibold text-slate-700 truncate">{alloc.goalName}</span>
-                      <div className="w-20 relative">
-                        <span className="absolute left-2 top-1 text-[10px] text-slate-400 font-medium">RM</span>
-                        <input 
-                          type="number" 
-                          step="0.01"
-                          value={alloc.allocatedAmount}
-                          onChange={(e) => {
-                            const newAlloc = [...goalAllocations];
-                            newAlloc[index].allocatedAmount = parseFloat(e.target.value) || 0;
-                            setGoalAllocations(newAlloc);
-                          }}
-                          className="w-full rounded bg-white pl-6 pr-1 py-1 text-xs font-bold text-gx-900 focus:outline-none focus:ring-1 focus:ring-gx-500"
-                        />
+                <div className="pt-2 border-t border-slate-100 animate-in slide-in-from-top-2 duration-200">
+                  <label className="text-xs font-semibold text-slate-500 mb-2 block">Savings Goal Allocation</label>
+                  <div className="space-y-2">
+                    {goalAllocations.map((alloc, index) => (
+                      <div key={index} className="flex gap-2 items-center bg-slate-50 p-2 rounded-lg border border-slate-200">
+                        <Target size={14} className="text-gx-500" />
+                        <span className="flex-1 text-xs font-semibold text-slate-700 truncate">{alloc.goalName}</span>
+                        <div className="w-20 relative">
+                          <span className="absolute left-2 top-1 text-[10px] text-slate-400 font-medium">RM</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={alloc.allocatedAmount}
+                            onChange={(e) => {
+                              const newAlloc = [...goalAllocations];
+                              newAlloc[index].allocatedAmount = parseFloat(e.target.value) || 0;
+                              setGoalAllocations(newAlloc);
+                            }}
+                            className="w-full rounded bg-white pl-6 pr-1 py-1 text-xs font-bold text-gx-900 focus:outline-none focus:ring-1 focus:ring-gx-500"
+                          />
+                        </div>
+                        <button onClick={() => setGoalAllocations(goalAllocations.filter((_, i) => i !== index))} className="text-slate-400 hover:text-red-500">
+                          <X size={14} />
+                        </button>
                       </div>
-                      <button onClick={() => setGoalAllocations(goalAllocations.filter((_, i) => i !== index))} className="text-slate-400 hover:text-red-500">
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
-                  
-                  {showNewGoal ? (
-                    <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-200 space-y-2">
-                      <input type="text" placeholder="Goal Name" value={newGoalName} onChange={e => setNewGoalName(e.target.value)} className="w-full text-xs p-1.5 rounded border border-emerald-200" />
-                      <input type="number" placeholder="Target Amount" value={newGoalTarget} onChange={e => setNewGoalTarget(e.target.value)} className="w-full text-xs p-1.5 rounded border border-emerald-200" />
-                      <div className="flex gap-1 mt-1">
-                        <button onClick={() => setShowNewGoal(false)} className="flex-1 text-[10px] py-1.5 font-bold bg-white rounded border border-slate-200 text-slate-500">Cancel</button>
-                        <button onClick={handleCreateNewGoal} className="flex-1 text-[10px] py-1.5 font-bold bg-gx-500 rounded text-white">Create & Select</button>
+                    ))}
+
+                    {showNewGoal ? (
+                      <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-200 space-y-2">
+                        <input type="text" placeholder="Goal Name" value={newGoalName} onChange={e => setNewGoalName(e.target.value)} className="w-full text-xs p-1.5 rounded border border-emerald-200" />
+                        <input type="number" placeholder="Target Amount" value={newGoalTarget} onChange={e => setNewGoalTarget(e.target.value)} className="w-full text-xs p-1.5 rounded border border-emerald-200" />
+                        <div className="flex gap-1 mt-1">
+                          <button onClick={() => setShowNewGoal(false)} className="flex-1 text-[10px] py-1.5 font-bold bg-white rounded border border-slate-200 text-slate-500">Cancel</button>
+                          <button onClick={handleCreateNewGoal} className="flex-1 text-[10px] py-1.5 font-bold bg-gx-500 rounded text-white">Create & Select</button>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <select 
-                        onChange={(e) => { addGoalAllocation(e.target.value); e.target.value = ""; }}
-                        className="flex-1 text-xs p-1.5 rounded-lg border border-slate-200 bg-white"
-                        defaultValue=""
-                      >
-                        <option value="" disabled>Select Goal...</option>
-                        {data.goals.filter(g => !goalAllocations.find(a => a.goalId === g.id)).map(g => (
-                          <option key={g.id} value={g.id}>{g.name}</option>
-                        ))}
-                      </select>
-                      <button onClick={() => setShowNewGoal(true)} className="px-2 text-[10px] font-bold bg-slate-100 text-slate-600 rounded-lg whitespace-nowrap">
-                        + New
-                      </button>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex gap-2">
+                        <select
+                          onChange={(e) => { addGoalAllocation(e.target.value); e.target.value = ""; }}
+                          className="flex-1 text-xs p-1.5 rounded-lg border border-slate-200 bg-white"
+                          defaultValue=""
+                        >
+                          <option value="" disabled>Select Goal...</option>
+                          {data.goals.filter(g => !goalAllocations.find(a => a.goalId === g.id)).map(g => (
+                            <option key={g.id} value={g.id}>{g.name}</option>
+                          ))}
+                        </select>
+                        <button onClick={() => setShowNewGoal(true)} className="px-2 text-[10px] font-bold bg-slate-100 text-slate-600 rounded-lg whitespace-nowrap">
+                          + New
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-2 flex justify-between text-[10px] font-semibold">
+                    <span className="text-slate-500">Unallocated:</span>
+                    <span className={unallocatedAmount < 0 ? "text-red-500" : "text-gx-600"}>{money(unallocatedAmount)}</span>
+                  </div>
                 </div>
-                <div className="mt-2 flex justify-between text-[10px] font-semibold">
-                  <span className="text-slate-500">Unallocated:</span>
-                  <span className={unallocatedAmount < 0 ? "text-red-500" : "text-gx-600"}>{money(unallocatedAmount)}</span>
-                </div>
-              </div>
               )}
 
               <div className="mt-6 flex gap-3 pt-2">

@@ -15,20 +15,20 @@ export default function FloatingChat() {
     if (!text.trim()) return;
     setThread((current) => [...current, { role: "user", text }]);
     setMessage("");
-    const response = await post("/chat", { 
+    const response = await post("/chat", {
       message: text,
       history: thread.map(h => ({ role: h.role, text: h.text }))
     });
-    setThread((current) => [...current, { 
-      role: "assistant", 
-      text: response.response, 
+    setThread((current) => [...current, {
+      role: "assistant",
+      text: response.response,
       thought: response.thought_process,
-      evidence: response.insights 
+      evidence: response.insights
     }]);
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="absolute bottom-20 right-4 z-50 flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
         <div className="mb-4 flex w-[90vw] max-w-[380px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200 h-[600px] max-h-[80vh]">
@@ -49,7 +49,7 @@ export default function FloatingChat() {
               <div key={index} className={`max-w-[88%] rounded-lg p-3 ${item.role === "user" ? "ml-auto bg-gx-500 text-white" : "bg-white border border-emerald-100 text-gx-900 shadow-sm"}`}>
                 {item.thought && (
                   <div className="mb-2 rounded border border-emerald-100 bg-emerald-50/50 p-2 text-[10px] font-mono leading-tight text-slate-500">
-                    <span className="font-bold text-gx-600 uppercase">Nova's Reasoning:</span><br/>
+                    <span className="font-bold text-gx-600 uppercase">Nova's Reasoning:</span><br />
                     {item.thought}
                   </div>
                 )}

@@ -10,7 +10,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
   const [error, setError] = useState("");
   const [serverFileUrl, setServerFileUrl] = useState(null);
   const [rawText, setRawText] = useState("");
-  
+
   // Camera state
   const [useCamera, setUseCamera] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
@@ -28,7 +28,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
   const [tax, setTax] = useState(0);
   const [serviceCharge, setServiceCharge] = useState(0);
   const [showMetadata, setShowMetadata] = useState(false);
-  
+
   // Goals state
   const [goals, setGoals] = useState([]);
   const [goalAllocations, setGoalAllocations] = useState([]);
@@ -61,7 +61,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
           setUseCamera(false);
         });
     }
-    
+
     return () => {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -71,18 +71,18 @@ export default function ReceiptScanner({ onTransactionSaved }) {
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
-    
+
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    
+
     // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    
+
     // Draw video frame to canvas
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
+
     // Convert to blob and process
     canvas.toBlob((blob) => {
       const capturedFile = new File([blob], "capture.jpg", { type: "image/jpeg" });
@@ -125,7 +125,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
       setExtractedData(data);
       setServerFileUrl(result.file_url);
       setRawText(rawTextData);
-      
+
       setMerchant(data.merchant || "");
       setDate(data.date || "");
       setAmount(data.total ? data.total.toString() : "");
@@ -135,12 +135,12 @@ export default function ReceiptScanner({ onTransactionSaved }) {
       if (!categories.includes(data.category) && data.category && data.category !== "Other") {
         setCustomCategory(data.category);
       }
-      
+
       // Setup items list
       if (data.items && Array.isArray(data.items) && data.items.length > 0) {
-        setItems(data.items.map(item => ({ 
-          name: item.name || "Unknown Item", 
-          price: item.price ? item.price.toString() : "0.00" 
+        setItems(data.items.map(item => ({
+          name: item.name || "Unknown Item",
+          price: item.price ? item.price.toString() : "0.00"
         })));
       } else {
         setItems([]);
@@ -196,7 +196,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
       };
 
       await post("/ocr/confirm", payload);
-      
+
       if (onTransactionSaved) {
         onTransactionSaved();
       }
@@ -211,7 +211,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
     const newItems = [...items];
     const oldPrice = parseFloat(newItems[index].price) || 0;
     newItems[index][field] = value;
-    
+
     if (field === 'price') {
       const newPrice = parseFloat(value) || 0;
       const diff = newPrice - oldPrice;
@@ -219,7 +219,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
         setAmount((prev) => (parseFloat(prev || 0) + diff).toFixed(2));
       }
     }
-    
+
     setItems(newItems);
   };
 
@@ -273,31 +273,28 @@ export default function ReceiptScanner({ onTransactionSaved }) {
   };
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-gx-900">Scan Receipt</h1>
-          <p className="text-slate-500">Auto-extract and edit transaction details</p>
-        </div>
+    <div className="space-y-4 px-6 pt-10 pb-6">
+      <div className="mb-4">
+        <h1 className="text-2xl font-black text-gx-900 leading-tight">Scan Receipt</h1>
+        <p className="text-xs text-slate-500">Auto-extract transaction details</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left Col: Upload / Image Section */}
+      <div className="flex flex-col gap-4">
+        {/* Top Section: Upload / Image Section */}
         <div className="flex flex-col gap-4">
-          <div 
-            className={`relative flex min-h-[500px] flex-col items-center justify-center overflow-hidden rounded-2xl border-2 transition-colors ${
-              preview || useCamera ? "border-transparent bg-black" : "border-dashed border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50"
-            }`}
+          <div
+            className={`relative flex min-h-[350px] md:min-h-[500px] flex-col items-center justify-center overflow-hidden rounded-2xl border-2 transition-colors ${preview || useCamera ? "border-transparent bg-black" : "border-dashed border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50"
+              }`}
           >
             {preview ? (
               <>
                 <img src={preview} alt="Receipt Preview" className="h-full w-full object-contain opacity-80" />
                 {!loading && !extractedData && (
-                   <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                     <Loader2 className="h-10 w-10 animate-spin text-white" />
-                   </div>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <Loader2 className="h-10 w-10 animate-spin text-white" />
+                  </div>
                 )}
-                <button 
+                <button
                   onClick={reset}
                   className="absolute right-4 top-4 rounded-full bg-black/60 p-2 text-white hover:bg-black/80 backdrop-blur"
                 >
@@ -308,27 +305,27 @@ export default function ReceiptScanner({ onTransactionSaved }) {
               <>
                 <video ref={videoRef} className="h-full w-full object-cover" playsInline />
                 <canvas ref={canvasRef} className="hidden" />
-                
+
                 {/* Camera Overlay */}
                 <div className="absolute inset-0 border-[40px] border-black/40 pointer-events-none flex items-center justify-center">
-                   <div className="w-full h-full border-2 border-white/50 rounded-lg"></div>
+                  <div className="w-full h-full border-2 border-white/50 rounded-lg"></div>
                 </div>
 
                 <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-6 px-4">
-                  <button 
+                  <button
                     onClick={() => setUseCamera(false)}
                     className="rounded-full bg-white/20 p-4 text-white backdrop-blur hover:bg-white/30"
                   >
                     <X size={24} />
                   </button>
-                  <button 
+                  <button
                     onClick={capturePhoto}
                     disabled={!cameraActive}
                     className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-gx-600 shadow-xl transition active:scale-95 disabled:opacity-50"
                   >
                     <Aperture size={32} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => fileInputRef.current?.click()}
                     className="rounded-full bg-white/20 p-4 text-white backdrop-blur hover:bg-white/30"
                   >
@@ -343,16 +340,16 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                 </div>
                 <h3 className="mb-2 text-lg font-bold text-gx-900">Add a Receipt</h3>
                 <p className="mb-8 text-sm text-slate-500">Take a photo or upload an image to auto-extract details</p>
-                
+
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  <button 
+                  <button
                     onClick={() => setUseCamera(true)}
                     className="flex items-center justify-center gap-2 rounded-xl bg-gx-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-emerald-500/30 transition hover:bg-gx-600"
                   >
                     <Camera size={20} />
                     <span>Open Camera</span>
                   </button>
-                  <button 
+                  <button
                     onClick={() => fileInputRef.current?.click()}
                     className="flex items-center justify-center gap-2 rounded-xl bg-white border border-slate-200 px-6 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
@@ -362,65 +359,65 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                 </div>
               </div>
             )}
-            
-            <input 
-              type="file" 
-              accept="image/*" 
-              className="hidden" 
+
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
               ref={fileInputRef}
               onChange={handleFileChange}
             />
           </div>
 
           {loading && (
-             <div className="flex items-center justify-center gap-3 rounded-xl bg-blue-50 p-4 text-blue-700 animate-pulse">
-               <Loader2 className="h-5 w-5 animate-spin" />
-               <span className="font-medium">AI is extracting details...</span>
-             </div>
+            <div className="flex items-center justify-center gap-3 rounded-xl bg-blue-50 p-4 text-blue-700 animate-pulse">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="font-medium">AI is extracting details...</span>
+            </div>
           )}
 
           {error && (
-             <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600 border border-red-100">
-               {error}
-             </div>
+            <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600 border border-red-100">
+              {error}
+            </div>
           )}
         </div>
 
-        {/* Right Col: Data Form Section */}
+        {/* Bottom Section: Data Form Section */}
         <div className="flex flex-col gap-4">
-          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm min-h-[500px] flex flex-col">
-            <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm min-h-[400px] flex flex-col">
+            <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <FileText className="text-gx-500" size={24} />
-                <h2 className="text-xl font-bold text-gx-900">Transaction Details</h2>
+                <FileText className="text-gx-500" size={20} />
+                <h2 className="text-lg font-bold text-gx-900">Details</h2>
               </div>
-            {extractedData && (
-              <div className="text-right">
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Total Amount (RM)</p>
-                <input 
-                  type="number" 
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  disabled={loading}
-                  className="w-32 rounded-lg border-b-2 border-transparent bg-transparent py-1 text-right text-3xl font-black text-gx-900 focus:border-gx-500 focus:outline-none transition-colors disabled:opacity-50"
-                  placeholder="0.00"
-                />
-              </div>
-            )}
+              {extractedData && (
+                <div className="text-right">
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Total Amount (RM)</p>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    disabled={loading}
+                    className="w-32 rounded-lg border-b-2 border-transparent bg-transparent py-1 text-right text-3xl font-black text-gx-900 focus:border-gx-500 focus:outline-none transition-colors disabled:opacity-50"
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
             </div>
 
             {!extractedData ? (
-               <div className="flex flex-1 flex-col items-center justify-center text-center text-slate-400">
-                  <FileText size={48} className="mb-4 opacity-20" />
-                  <p>Scan a receipt to see editable details here</p>
-               </div>
+              <div className="flex flex-1 flex-col items-center justify-center text-center text-slate-400">
+                <FileText size={48} className="mb-4 opacity-20" />
+                <p>Scan a receipt to see editable details here</p>
+              </div>
             ) : (
               <div className="flex-1 space-y-5 text-left overflow-y-auto pr-2 pb-4">
                 <div>
                   <label className="mb-1.5 block text-sm font-semibold text-slate-700">Merchant Name</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={merchant}
                     onChange={(e) => setMerchant(e.target.value)}
                     disabled={loading}
@@ -432,8 +429,8 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="mb-1.5 block text-sm font-semibold text-slate-700">Date</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       disabled={loading}
@@ -442,7 +439,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-semibold text-slate-700">Category</label>
-                    <select 
+                    <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
                       disabled={loading}
@@ -456,8 +453,8 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                 {category === "Other" && (
                   <div className="animate-in fade-in slide-in-from-top-2">
                     <label className="mb-1.5 block text-sm font-semibold text-slate-700">Custom Category Name</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={customCategory}
                       onChange={(e) => setCustomCategory(e.target.value)}
                       disabled={loading}
@@ -470,14 +467,14 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                 <div className="pt-4 border-t border-slate-100">
                   <div className="flex items-center justify-between mb-3">
                     <label className="block text-sm font-semibold text-slate-700">Purchased Items</label>
-                    <button 
+                    <button
                       onClick={addItem}
                       className="flex items-center gap-1 text-xs font-bold text-gx-600 hover:text-gx-700 bg-emerald-50 px-3 py-1.5 rounded-lg"
                     >
                       <Plus size={14} /> Add Item
                     </button>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {items.length === 0 ? (
                       <p className="text-sm text-slate-500 text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">No items detected. Add them manually.</p>
@@ -485,8 +482,8 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                       items.map((item, index) => (
                         <div key={index} className="flex gap-3 items-start group">
                           <div className="flex-1">
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               value={item.name}
                               onChange={(e) => handleItemChange(index, 'name', e.target.value)}
                               placeholder="Item name"
@@ -495,8 +492,8 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                           </div>
                           <div className="w-28 relative">
                             <span className="absolute left-3 top-2 text-sm text-slate-400 font-medium">RM</span>
-                            <input 
-                              type="number" 
+                            <input
+                              type="number"
                               step="0.01"
                               value={item.price}
                               onChange={(e) => handleItemChange(index, 'price', e.target.value)}
@@ -504,7 +501,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                               className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm font-medium focus:border-gx-500 focus:outline-none focus:ring-1 focus:ring-gx-500 transition-all"
                             />
                           </div>
-                          <button 
+                          <button
                             onClick={() => removeItem(index)}
                             className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100"
                           >
@@ -515,15 +512,15 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="pt-4 border-t border-slate-100">
-                  <button 
+                  <button
                     onClick={() => setShowMetadata(!showMetadata)}
                     className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition flex items-center gap-1"
                   >
                     {showMetadata ? "Hide Receipt Metadata" : "Show Receipt Metadata (Tax/Service)"}
                   </button>
-                  
+
                   {showMetadata && (
                     <div className="mt-3 grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
                       <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -542,7 +539,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                   <div className="flex items-center justify-between mb-3">
                     <label className="block text-sm font-semibold text-slate-700">Savings Goal Allocation (Optional)</label>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {goalAllocations.map((alloc, index) => (
                       <div key={index} className="flex gap-3 items-center bg-slate-50 p-2 rounded-lg border border-slate-200">
@@ -550,8 +547,8 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                         <span className="flex-1 text-sm font-semibold text-slate-700">{alloc.goalName}</span>
                         <div className="w-24 relative">
                           <span className="absolute left-2 top-1.5 text-xs text-slate-400 font-medium">RM</span>
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             step="0.01"
                             value={alloc.allocatedAmount}
                             onChange={(e) => updateGoalAllocation(index, e.target.value)}
@@ -563,7 +560,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                         </button>
                       </div>
                     ))}
-                    
+
                     {showNewGoal ? (
                       <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200 space-y-3">
                         <input type="text" placeholder="Goal Name (e.g. Vacation)" value={newGoalName} onChange={e => setNewGoalName(e.target.value)} className="w-full text-sm p-2 rounded border border-emerald-200" />
@@ -575,7 +572,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                       </div>
                     ) : (
                       <div className="flex gap-2">
-                        <select 
+                        <select
                           onChange={(e) => { addGoalAllocation(e.target.value); e.target.value = ""; }}
                           className="flex-1 text-sm p-2 rounded-lg border border-slate-200 bg-white"
                           defaultValue=""
@@ -591,7 +588,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="mt-3 flex justify-between text-xs font-semibold px-1">
                     <span className="text-slate-500">Unallocated Amount:</span>
                     <span className={unallocatedAmount < 0 ? "text-red-500" : "text-gx-600"}>RM {unallocatedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -602,7 +599,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
 
             {extractedData && (
               <div className="mt-4 flex gap-3 pt-4 border-t border-slate-100">
-                <button 
+                <button
                   onClick={reset}
                   disabled={loading}
                   className="flex items-center justify-center gap-2 flex-[1] rounded-xl bg-slate-100 py-4 font-bold text-slate-600 transition hover:bg-slate-200 hover:text-slate-900 disabled:opacity-50"
@@ -610,7 +607,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                   <RefreshCw size={18} />
                   <span>Retake</span>
                 </button>
-                <button 
+                <button
                   onClick={handleConfirm}
                   disabled={loading}
                   className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-gx-500 py-4 font-bold text-white shadow-lg shadow-emerald-500/30 transition hover:bg-gx-600 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"

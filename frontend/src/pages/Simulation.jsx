@@ -98,27 +98,28 @@ export default function Simulation({ data }) {
   };
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-4 py-6">
+    <main className="space-y-6 px-6 pt-10 pb-6">
       {/* Header */}
       <section>
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles size={18} className="text-gx-600" />
-          <p className="text-sm font-bold text-gx-600 uppercase tracking-wider">Future Lab</p>
+          <Sparkles size={16} className="text-gx-600" />
+          <p className="text-[10px] font-black text-gx-600 uppercase tracking-widest">Future Lab</p>
         </div>
-        <h1 className="text-3xl font-black text-gx-900">Simulate decisions before money moves.</h1>
-        <p className="text-sm text-slate-500 mt-1">Real-time financial impact analysis powered by your live data.</p>
+        <h1 className="text-2xl font-black text-gx-900 leading-tight">Decide before you spend.</h1>
+        <p className="text-xs text-slate-500 mt-1">Real-time impact analysis powered by your graph.</p>
       </section>
 
       {/* Tab Navigation */}
-      <nav className="flex gap-2">
+      <nav className="flex gap-1.5 overflow-x-auto no-scrollbar">
         {tabs.map(t => {
           const Icon = t.icon;
+          const selected = tab === t.id;
           return (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all ${tab === t.id ? "bg-gx-900 text-white shadow-lg scale-[1.02]" : "bg-white text-slate-500 border border-slate-200 hover:border-gx-300"
+              className={`flex-1 min-w-0 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-black transition-all ${selected ? "bg-gx-900 text-white shadow-md" : "bg-white text-slate-400 border border-slate-100 hover:bg-slate-50"
                 }`}>
-              <Icon size={16} />
-              {t.label}
+              <Icon size={14} className="shrink-0" />
+              <span className="truncate">{t.label}</span>
             </button>
           );
         })}
@@ -126,7 +127,7 @@ export default function Simulation({ data }) {
 
       {/* === SPENDING INTERVENTION === */}
       {tab === "spending" && (
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-4">
           <div className="space-y-5">
             {/* Live Balance Preview */}
             <div className={`rounded-2xl p-5 border ${severityColors[spendPreview.severity].bg} ${severityColors[spendPreview.severity].border}`}>
@@ -136,18 +137,18 @@ export default function Simulation({ data }) {
                   {spendPreview.severity} risk
                 </span>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Current</p>
-                  <p className="text-lg font-black text-slate-800">{money(balance)}</p>
+                  <p className="text-sm font-black text-slate-800">{money(balance)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">After Purchase</p>
-                  <p className={`text-lg font-black ${spendPreview.future < 0 ? "text-red-600" : "text-slate-800"}`}>{money(spendPreview.future)}</p>
+                  <p className={`text-sm font-black ${spendPreview.future < 0 ? "text-red-600" : "text-slate-800"}`}>{money(spendPreview.future)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">% of Balance</p>
-                  <p className={`text-lg font-black ${severityColors[spendPreview.severity].text}`}>{spendPreview.pct}%</p>
+                  <p className={`text-sm font-black ${severityColors[spendPreview.severity].text}`}>{spendPreview.pct}%</p>
                 </div>
               </div>
               {/* Visual bar */}
@@ -163,7 +164,7 @@ export default function Simulation({ data }) {
                 <Wallet size={18} className="text-gx-600" /> Purchase Amount
               </h2>
               <div className="flex items-end gap-3 mb-3">
-                <span className="text-3xl font-black text-gx-900">{money(purchaseAmount)}</span>
+                <span className="text-xl font-black text-gx-900">{money(purchaseAmount)}</span>
               </div>
               <input type="range" min="0" max={Math.max(10000, balance)} value={purchaseAmount}
                 onChange={e => setPurchaseAmount(Number(e.target.value))}
@@ -196,11 +197,11 @@ export default function Simulation({ data }) {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                       <p className="text-[10px] text-slate-400 font-bold uppercase">Future Balance</p>
-                      <p className="text-xl font-black text-slate-800 mt-1">{money(purchaseResult.future_balance)}</p>
+                      <p className="text-base font-black text-slate-800 mt-1">{money(purchaseResult.future_balance)}</p>
                     </div>
                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                       <p className="text-[10px] text-slate-400 font-bold uppercase">Low-Balance In</p>
-                      <p className="text-xl font-black text-slate-800 mt-1">{purchaseResult.days_until_low_balance} days</p>
+                      <p className="text-base font-black text-slate-800 mt-1">{purchaseResult.days_until_low_balance} days</p>
                     </div>
                   </div>
                 </div>
@@ -212,23 +213,23 @@ export default function Simulation({ data }) {
 
       {/* === WHAT-IF FORECAST === */}
       {tab === "forecast" && (
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-4">
           <div className="space-y-5">
             {/* Live Preview */}
             <div className="rounded-2xl p-5 bg-emerald-50 border border-emerald-200">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 block">Projected Growth</span>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Total Saved</p>
-                  <p className="text-lg font-black text-slate-800">{money(forecastPreview.totalSaved)}</p>
+                  <p className="text-sm font-black text-slate-800">{money(forecastPreview.totalSaved)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">With 3% Growth</p>
-                  <p className="text-lg font-black text-emerald-700">{money(forecastPreview.futureValue)}</p>
+                  <p className="text-sm font-black text-emerald-700">{money(forecastPreview.futureValue)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Interest Earned</p>
-                  <p className="text-lg font-black text-emerald-600">+{money(forecastPreview.growth)}</p>
+                  <p className="text-sm font-black text-emerald-600">+{money(forecastPreview.growth)}</p>
                 </div>
               </div>
             </div>
@@ -240,7 +241,7 @@ export default function Simulation({ data }) {
                   <PiggyBank size={18} className="text-emerald-600" /> Daily Savings
                 </h2>
                 <div className="flex items-end gap-2 mb-2">
-                  <span className="text-3xl font-black text-emerald-700">{money(dailySavings)}</span>
+                  <span className="text-xl font-black text-emerald-700">{money(dailySavings)}</span>
                   <span className="text-sm text-slate-400 font-bold mb-1">/ day</span>
                 </div>
                 <input type="range" min="1" max="100" value={dailySavings}
@@ -251,7 +252,7 @@ export default function Simulation({ data }) {
               <div>
                 <label className="text-sm font-bold text-slate-600 flex items-center gap-2"><Calendar size={14} /> Investment Horizon</label>
                 <div className="flex items-end gap-2 mt-1 mb-2">
-                  <span className="text-3xl font-black text-emerald-700">{years}</span>
+                  <span className="text-xl font-black text-emerald-700">{years}</span>
                   <span className="text-sm text-slate-400 font-bold mb-1">years</span>
                 </div>
                 <input type="range" min="1" max="30" value={years}
@@ -280,11 +281,11 @@ export default function Simulation({ data }) {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                     <p className="text-[10px] text-slate-400 font-bold uppercase">Projected Value</p>
-                    <p className="text-xl font-black text-emerald-700 mt-1">{money(forecastResult.projected_value)}</p>
+                    <p className="text-base font-black text-emerald-700 mt-1">{money(forecastResult.projected_value)}</p>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                     <p className="text-[10px] text-slate-400 font-bold uppercase">Growth Earned</p>
-                    <p className="text-xl font-black text-emerald-600 mt-1">+{money(forecastResult.projected_growth)}</p>
+                    <p className="text-base font-black text-emerald-600 mt-1">+{money(forecastResult.projected_growth)}</p>
                   </div>
                 </div>
               </div>
@@ -295,7 +296,7 @@ export default function Simulation({ data }) {
 
       {/* === LOAN EVALUATOR === */}
       {tab === "loan" && (
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-4">
           <div className="space-y-5">
             {/* Live Preview */}
             <div className={`rounded-2xl p-5 border ${Number(loanPreview.pctIncome) > 40 ? "bg-red-50 border-red-200" : Number(loanPreview.pctIncome) > 25 ? "bg-amber-50 border-amber-200" : "bg-blue-50 border-blue-200"
@@ -305,18 +306,18 @@ export default function Simulation({ data }) {
                 <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded text-white ${Number(loanPreview.pctIncome) > 40 ? "bg-red-500" : Number(loanPreview.pctIncome) > 25 ? "bg-amber-500" : "bg-blue-500"
                   }`}>{Number(loanPreview.pctIncome) > 40 ? "RISKY" : Number(loanPreview.pctIncome) > 25 ? "CAUTION" : "HEALTHY"}</span>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Monthly Payment</p>
-                  <p className="text-lg font-black text-slate-800">{money(loanPreview.monthly)}</p>
+                  <p className="text-sm font-black text-slate-800">{money(loanPreview.monthly)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Total Interest</p>
-                  <p className="text-lg font-black text-red-600">{money(loanPreview.interest)}</p>
+                  <p className="text-sm font-black text-red-600">{money(loanPreview.interest)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">% of Income</p>
-                  <p className={`text-lg font-black ${Number(loanPreview.pctIncome) > 40 ? "text-red-600" : "text-slate-800"}`}>{loanPreview.pctIncome}%</p>
+                  <p className={`text-sm font-black ${Number(loanPreview.pctIncome) > 40 ? "text-red-600" : "text-slate-800"}`}>{loanPreview.pctIncome}%</p>
                 </div>
               </div>
             </div>
@@ -326,7 +327,7 @@ export default function Simulation({ data }) {
               <div>
                 <label className="text-sm font-bold text-slate-600 flex items-center gap-2"><CreditCard size={14} /> Loan Amount</label>
                 <div className="flex items-end gap-2 mt-1 mb-2">
-                  <span className="text-3xl font-black text-blue-700">{money(loanAmount)}</span>
+                  <span className="text-xl font-black text-blue-700">{money(loanAmount)}</span>
                 </div>
                 <input type="range" min="1000" max="100000" step="500" value={loanAmount}
                   onChange={e => setLoanAmount(Number(e.target.value))} className="w-full accent-blue-500" />
@@ -334,7 +335,7 @@ export default function Simulation({ data }) {
               <div>
                 <label className="text-sm font-bold text-slate-600 flex items-center gap-2"><Percent size={14} /> Interest Rate</label>
                 <div className="flex items-end gap-2 mt-1 mb-2">
-                  <span className="text-3xl font-black text-blue-700">{loanInterest}%</span>
+                  <span className="text-xl font-black text-blue-700">{loanInterest}%</span>
                   <span className="text-sm text-slate-400 font-bold mb-1">p.a.</span>
                 </div>
                 <input type="range" min="1" max="15" step="0.5" value={loanInterest}
@@ -343,7 +344,7 @@ export default function Simulation({ data }) {
               <div>
                 <label className="text-sm font-bold text-slate-600 flex items-center gap-2"><Clock size={14} /> Duration</label>
                 <div className="flex items-end gap-2 mt-1 mb-2">
-                  <span className="text-3xl font-black text-blue-700">{loanMonths}</span>
+                  <span className="text-xl font-black text-blue-700">{loanMonths}</span>
                   <span className="text-sm text-slate-400 font-bold mb-1">months</span>
                 </div>
                 <input type="range" min="6" max="120" value={loanMonths}
@@ -370,19 +371,19 @@ export default function Simulation({ data }) {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                     <p className="text-[10px] text-slate-400 font-bold uppercase">Monthly Payment</p>
-                    <p className="text-xl font-black text-slate-800 mt-1">{money(loanResult.monthly_payment)}</p>
+                    <p className="text-base font-black text-slate-800 mt-1">{money(loanResult.monthly_payment)}</p>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                     <p className="text-[10px] text-slate-400 font-bold uppercase">Total Repayment</p>
-                    <p className="text-xl font-black text-red-700 mt-1">{money(loanResult.total_repayment)}</p>
+                    <p className="text-base font-black text-red-700 mt-1">{money(loanResult.total_repayment)}</p>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                     <p className="text-[10px] text-slate-400 font-bold uppercase">Savings Impact</p>
-                    <p className="text-xl font-black text-amber-600 mt-1">-{money(loanResult.impact_on_savings)}/mo</p>
+                    <p className="text-base font-black text-amber-600 mt-1">-{money(loanResult.impact_on_savings)}/mo</p>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                     <p className="text-[10px] text-slate-400 font-bold uppercase">Goal Delay</p>
-                    <p className="text-xl font-black text-red-600 mt-1">+{loanResult.goal_delay_months} months</p>
+                    <p className="text-base font-black text-red-600 mt-1">+{loanResult.goal_delay_months} months</p>
                   </div>
                 </div>
               </div>

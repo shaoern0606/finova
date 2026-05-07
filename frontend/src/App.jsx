@@ -122,26 +122,38 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6fbf8] pb-20 md:pb-0 relative">
-      <Nav active={page} onChange={setPage} />
-      {page === "dashboard" && (
-        <Dashboard
-          data={data}
-          onDemoSalary={demoSalary}
-          onDemoOverspend={demoOverspend}
-          demoResult={demoResult}
-          onUpdate={load}
-          onDataUpdate={setData}
-          userLocation={userLocation}
-          locationStatus={locationStatus}
-          onRefreshMerchants={fetchMerchants}
-        />
-      )}
-      {page === "simulation" && <Simulation data={data} />}
-      {page === "scanner" && (
-        <ReceiptScanner onTransactionSaved={async () => { await load(); setPage("dashboard"); }} />
-      )}
-      <FloatingChat />
+    <div className="min-h-screen bg-slate-900 flex justify-center items-start md:items-center p-0 md:p-4">
+      {/* Mobile Frame Container */}
+      <div className="w-full max-w-md min-h-screen md:min-h-[850px] md:h-[850px] bg-[#f6fbf8] shadow-2xl relative flex flex-col overflow-hidden md:rounded-[3rem] md:border-[8px] md:border-slate-800">
+
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto no-scrollbar relative">
+          {page === "dashboard" && (
+            <Dashboard
+              data={data}
+              onDemoSalary={demoSalary}
+              onDemoOverspend={demoOverspend}
+              demoResult={demoResult}
+              onUpdate={load}
+              onDataUpdate={setData}
+              userLocation={userLocation}
+              locationStatus={locationStatus}
+              onRefreshMerchants={fetchMerchants}
+            />
+          )}
+          {page === "simulation" && <Simulation data={data} />}
+          {page === "scanner" && (
+            <ReceiptScanner onTransactionSaved={async () => { await load(); setPage("dashboard"); }} />
+          )}
+          {/* Spacer so content doesn't hide behind nav */}
+          <div className="h-4" />
+        </div>
+
+        {/* Fixed Bottom Navigation — outside scroll, pinned by flex */}
+        <Nav active={page} onChange={setPage} />
+
+        <FloatingChat />
+      </div>
     </div>
   );
 }

@@ -8,32 +8,32 @@ const items = [
 
 export default function Nav({ active, onChange }) {
   return (
-    <nav className="sticky bottom-0 z-20 border-t border-emerald-100 bg-white/95 px-3 py-2 backdrop-blur md:static md:border-b md:border-t-0">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2">
-        <div className="hidden items-center gap-2 md:flex">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-gx-500 font-black text-white">F</div>
-          <div>
-            <p className="text-sm font-black text-gx-900">FINMATE OS</p>
-            <p className="text-xs text-slate-500">FinScope Edition</p>
-          </div>
-        </div>
-        <div className="grid w-full grid-cols-3 gap-2 md:w-auto md:flex">
-          {items.map((item) => {
-            const Icon = item.icon;
-            const selected = active === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onChange(item.id)}
-                className={`flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold transition ${selected ? "bg-gx-500 text-white" : "bg-emerald-50 text-gx-900 hover:bg-emerald-100"
-                  }`}
-              >
-                <Icon size={17} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
+    <nav className="shrink-0 z-30 border-t border-slate-200 bg-white px-2 pb-3.5 pt-1.5">
+      <div className="grid w-full grid-cols-3 gap-1">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const selected = active === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onChange(item.id)}
+              className={`flex flex-col items-center justify-center gap-0.5 rounded-xl py-1 transition-all duration-300 ${selected
+                ? "text-gx-600 scale-110"
+                : "text-slate-400 hover:text-slate-600"
+                }`}
+            >
+              <div className={`p-1 rounded-lg transition-colors ${selected ? "bg-gx-50" : ""}`}>
+                <Icon size={20} strokeWidth={selected ? 2.5 : 2} />
+              </div>
+              <span className={`text-[10px] font-black uppercase tracking-wider ${selected ? "opacity-100" : "opacity-60"}`}>
+                {item.label}
+              </span>
+              {selected && (
+                <div className="h-1 w-1 rounded-full bg-gx-600 mt-0.5" />
+              )}
+            </button>
+          );
+        })}
       </div>
     </nav>
   );

@@ -1,73 +1,77 @@
-import { Info } from "lucide-react";
+import { Info, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
 
 export default function ScoreRing({ data }) {
+  const [showDetail, setShowDetail] = useState(false);
   if (!data) return null;
   const score = data.score || 0;
   const color = score >= 75 ? "#00a86b" : score >= 55 ? "#d59b00" : "#dc2626";
   
   return (
-    <div className="flex items-center gap-4 relative group">
-      <div
-        className="grid h-24 w-24 place-items-center rounded-full"
-        style={{ background: `conic-gradient(${color} ${score * 3.6}deg, #e8f5ee 0deg)` }}
-      >
-        <div className="grid h-16 w-16 place-items-center rounded-full bg-white text-xl font-black text-gx-900 shadow-inner">
-          {score}
+    <div className="flex flex-col items-center">
+      {/* Ring + Label */}
+      <div className="flex items-center gap-4 w-full">
+        <div
+          className="grid h-20 w-20 shrink-0 place-items-center rounded-full"
+          style={{ background: `conic-gradient(${color} ${score * 3.6}deg, #e8f5ee 0deg)` }}
+        >
+          <div className="grid h-14 w-14 place-items-center rounded-full bg-white text-lg font-black text-gx-900 shadow-inner">
+            {score}
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-gx-700">FinScope Score</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">Tap to see breakdown</p>
+          <button 
+            onClick={() => setShowDetail(!showDetail)}
+            className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-gx-600 bg-emerald-50 px-2.5 py-1 rounded-full active:bg-emerald-100 transition"
+          >
+            <Info size={11} />
+            {showDetail ? "Hide Details" : "View Details"}
+            {showDetail ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+          </button>
         </div>
       </div>
-      <div>
-        <div className="flex items-center gap-1.5 cursor-pointer">
-          <p className="text-sm font-bold uppercase tracking-wide text-gx-700">FinScope Score</p>
-          <Info size={14} className="text-slate-400 group-hover:text-gx-500 transition-colors" />
-        </div>
-        <p className="mt-1 text-sm text-slate-600 font-medium">Hover for detailed breakdown & insights.</p>
-      </div>
 
-      {/* Hover Tooltip Modal */}
-      <div className="absolute top-full left-0 mt-4 w-96 rounded-xl bg-white p-5 shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-slate-100 z-50 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-        
-        <div className="mb-4 pb-3 border-b border-slate-100">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">FinScope Formula</p>
-          <p className="text-xs font-mono text-slate-600 bg-slate-50 p-2 rounded leading-relaxed">
-            (0.30 × Savings Consistency)<br/>
-            + (0.25 × Spending Stability)<br/>
-            + (0.20 × Debt Ratio Score)<br/>
-            + (0.15 × Emergency Fund Health)<br/>
-            + (0.10 × Goal Progress Rate)
-          </p>
-        </div>
+      {/* Expandable Detail Panel — replaces hover tooltip */}
+      {showDetail && (
+        <div className="mt-3 w-full rounded-xl bg-slate-50 p-3 border border-slate-100 space-y-3">
+          <div className="pb-2 border-b border-slate-200">
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Formula</p>
+            <p className="text-[10px] font-mono text-slate-600 leading-relaxed">
+              0.30×Savings + 0.25×Spending + 0.20×Debt + 0.15×Emergency + 0.10×Goals
+            </p>
+          </div>
 
-        <div className="space-y-3">
-          {data.breakdown?.map((b, i) => (
-            <div key={i}>
-              <div className="flex justify-between text-xs font-bold text-slate-700">
-                <span>{b.name}</span>
-                <span className="text-gx-600">{b.score.toFixed(0)}/100</span>
+          <div className="space-y-2">
+            {data.breakdown?.map((b, i) => (
+              <div key={i}>
+                <div className="flex justify-between text-[10px] font-bold text-slate-700">
+                  <span className="truncate">{b.name}</span>
+                  <span className="text-gx-600 shrink-0 ml-2">{b.score.toFixed(0)}/100</span>
+                </div>
+                <div className="mt-0.5 h-1 w-full bg-slate-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-gx-400 rounded-full" style={{ width: `${b.score}%` }} />
+                </div>
               </div>
-              <p className="text-[10px] text-slate-500 mt-0.5">{b.desc}</p>
-              <div className="mt-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-gx-400 rounded-full" style={{ width: `${b.score}%` }} />
-              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-1.5 text-[10px] pt-2 border-t border-slate-200">
+            <div className="bg-emerald-50 text-emerald-900 p-2 rounded-lg">
+              <span className="font-bold block text-[9px]">Positive Factors</span>
+              {data.top_factors?.join(", ")}
             </div>
-          ))}
-        </div>
-
-        <div className="mt-4 pt-4 border-t border-slate-100 grid gap-3 text-xs">
-          <div className="bg-emerald-50 text-emerald-900 p-2 rounded">
-            <span className="font-bold block">Top Positive Factors:</span>
-            {data.top_factors?.join(", ")}
-          </div>
-          <div className="bg-red-50 text-red-900 p-2 rounded">
-            <span className="font-bold block">Main Risk Factor:</span>
-            {data.risk_factor}
-          </div>
-          <div className="bg-blue-50 text-blue-900 p-2 rounded font-medium">
-            {data.insight}
+            <div className="bg-red-50 text-red-900 p-2 rounded-lg">
+              <span className="font-bold block text-[9px]">Risk Factor</span>
+              {data.risk_factor}
+            </div>
+            <div className="bg-blue-50 text-blue-900 p-2 rounded-lg font-medium">
+              {data.insight}
+            </div>
           </div>
         </div>
-
-      </div>
+      )}
     </div>
   );
 }
-
