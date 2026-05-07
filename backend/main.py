@@ -14,6 +14,12 @@ from services.prediction import evaluate_purchase, predict
 from services.recommendation import merchant_recommendations
 from services.scoring import credit_score
 from services.transactions import combined_balance, spending_summary
+from services.ocr import extract_receipt_data, save_transaction_from_receipt
+from fastapi import File, UploadFile
+from fastapi.staticfiles import StaticFiles
+import shutil
+import uuid
+import os
 
 
 app = FastAPI(title="FINMATE OS - FinScope Edition", version="1.0.0")
@@ -24,6 +30,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+UPLOAD_DIR = "uploads/receipts"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 class ForecastRequest(BaseModel):
@@ -157,4 +167,66 @@ def recommendations():
 @app.post("/chat")
 def chat(payload: ChatRequest):
     return llama_style_response(payload.message, intelligence_snapshot(), payload.history)
+
+
+@app.post("/ocr/upload")
+async def ocr_upload(file: UploadFile = File(...)):
+    file_extension = os.path.splitext(file.filename)[1]
+    file_name = f"{uuid.uuid4()}{file_extension}"
+    file_path = os.path.join(UPLOAD_DIR, file_name)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Process OCR
+    extracted_data = extract_receipt_data(file_path)
+    
+    return {
+        "status": "success",
+        "file_url": f"/uploads/receipts/{file_name}",
+        "extracted_data": extracted_data
+    }
+
+
+class TransactionConfirmRequest(BaseModel):
+    merchant: str
+    date: str
+    amount: float
+    category: str
+    source: str = "GrabPay"
+    receipt_url: str = None
+    items: list = []
+    raw_text: str = ""
+    custom_category: str = ""
+    tax: float = 0.0
+    service_charge: float = 0.0
+
+@app.post("/ocr/confirm")
+async def ocr_confirm(payload: TransactionConfirmRequest):
+    final_category = payload.custom_category if payload.category == "Other" and payload.custom_category else payload.category
+    
+    new_tx = {
+        "id": f"ocr_{uuid.uuid4().hex[:6]}",
+        "date": payload.date,
+        "merchant": payload.merchant,
+        "amount": -abs(payload.amount),
+        "type": "expense",
+        "category": final_category,
+        "receipt_url": payload.receipt_url,
+        "items": payload.items,
+        "raw_text": payload.raw_text,
+        "tax_metadata": {
+            "tax": payload.tax,
+            "service_charge": payload.service_charge
+        }
+    }
+    
+    if payload.source == "GXBank":
+        BANK_ACCOUNT["transactions"].insert(0, new_tx)
+        BANK_ACCOUNT["balance"] += new_tx["amount"]
+    else:
+        WALLET_ACCOUNT["transactions"].insert(0, new_tx)
+        WALLET_ACCOUNT["balance"] += new_tx["amount"]
+        
+    return {"status": "success", "transaction": new_tx}
 

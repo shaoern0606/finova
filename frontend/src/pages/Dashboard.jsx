@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowDownRight, BadgeCheck, Goal, Landmark } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, BadgeCheck, Goal, Landmark, Receipt } from "lucide-react";
 import Card from "../components/Card.jsx";
 import { CategoryBars, SpendingPie } from "../components/Charts.jsx";
 import ScoreRing from "../components/ScoreRing.jsx";
@@ -133,7 +133,10 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
           {data.summary.transactions.slice(0, 8).map((tx) => (
             <div key={tx.id} className="flex items-center justify-between py-3">
               <div>
-                <p className="font-semibold">{tx.merchant}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold">{tx.merchant}</p>
+                  {tx.receipt_url && <Receipt size={14} className="text-emerald-500" title="Receipt saved" />}
+                </div>
                 <p className="text-xs text-slate-500">{tx.source} · {tx.category} · {tx.date}</p>
               </div>
               <span className={`flex items-center gap-1 font-bold ${tx.amount < 0 ? "text-red-600" : "text-gx-600"}`}>

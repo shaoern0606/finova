@@ -4,6 +4,7 @@ import FloatingChat from "./components/FloatingChat.jsx";
 import Nav from "./components/Nav.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Simulation from "./pages/Simulation.jsx";
+import ReceiptScanner from "./pages/ReceiptScanner.jsx";
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
@@ -34,8 +35,8 @@ export default function App() {
       <Nav active={page} onChange={setPage} />
       {page === "dashboard" && <Dashboard data={data} onDemoSalary={demoSalary} onDemoOverspend={demoOverspend} demoResult={demoResult} />}
       {page === "simulation" && <Simulation data={data} />}
+      {page === "scanner" && <ReceiptScanner onTransactionSaved={async () => { await load(); setPage("dashboard"); }} />}
       <FloatingChat />
     </div>
   );
 }
-
