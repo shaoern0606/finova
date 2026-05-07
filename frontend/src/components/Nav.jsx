@@ -3,8 +3,7 @@ import { Bot, Gauge, Sparkles, Scan } from "lucide-react";
 const items = [
   { id: "dashboard", label: "Dashboard", icon: Gauge },
   { id: "simulation", label: "Simulation", icon: Sparkles },
-  { id: "scanner", label: "Scanner", icon: Scan },
-  { id: "chat", label: "Chat", icon: Bot }
+  { id: "scanner", label: "Scanner", icon: Scan }
 ];
 
 export default function Nav({ active, onChange }) {
@@ -18,7 +17,7 @@ export default function Nav({ active, onChange }) {
             <p className="text-xs text-slate-500">FinScope Edition</p>
           </div>
         </div>
-        <div className="grid w-full grid-cols-4 gap-2 md:w-auto md:flex">
+        <div className="grid w-full grid-cols-3 gap-2 md:w-auto md:flex">
           {items.map((item) => {
             const Icon = item.icon;
             const selected = active === item.id;
@@ -26,9 +25,8 @@ export default function Nav({ active, onChange }) {
               <button
                 key={item.id}
                 onClick={() => onChange(item.id)}
-                className={`flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold transition ${
-                  selected ? "bg-gx-500 text-white" : "bg-emerald-50 text-gx-900 hover:bg-emerald-100"
-                }`}
+                className={`flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold transition ${selected ? "bg-gx-500 text-white" : "bg-emerald-50 text-gx-900 hover:bg-emerald-100"
+                  }`}
               >
                 <Icon size={17} />
                 <span>{item.label}</span>

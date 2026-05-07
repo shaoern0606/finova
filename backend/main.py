@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from datetime import date, timedelta
+import uuid
 
-from data import BANK_ACCOUNT, GOALS, LOAN_ACCOUNT, USER, WALLET_ACCOUNT
+from data import BANK_ACCOUNT, GOALS, LOAN_ACCOUNT, USER, WALLET_ACCOUNT, TRANSACTIONS, reset_all_data
 from graph import build_graph
 from services.automation import automation_actions, salary_split
 from services.behavior import classify_behavior
@@ -129,6 +131,10 @@ def prediction():
 @app.get("/peer")
 def peer():
     return compare_to_peers(spending_summary(), USER)
+@app.post("/reset")
+def reset_demo_data():
+    reset_all_data()
+    return {"status": "success", "message": "Demo data restored to default state"}
 
 
 @app.post("/forecast")
@@ -159,9 +165,20 @@ def salary_automation():
     return salary_split(USER["monthly_income"])
 
 
+class LocationRequest(BaseModel):
+    lat: float
+    lng: float
+    category: str = None
+
+@app.post("/nearby-merchants")
+def nearby_merchants(payload: LocationRequest):
+    # Pass location and category filter to recommendation engine
+    return merchant_recommendations(spending_summary(), location={"lat": payload.lat, "lng": payload.lng}, category_filter=payload.category)
+
 @app.get("/recommendations")
-def recommendations():
-    return merchant_recommendations(spending_summary())
+def recommendations(lat: float = None, lng: float = None, category: str = None):
+    loc = {"lat": lat, "lng": lng} if lat and lng else None
+    return merchant_recommendations(spending_summary(), location=loc, category_filter=category)
 
 
 @app.post("/chat")
@@ -200,6 +217,17 @@ class TransactionConfirmRequest(BaseModel):
     custom_category: str = ""
     tax: float = 0.0
     service_charge: float = 0.0
+    goalAllocation: list = []
+
+def process_goal_allocation(allocations):
+    for alloc in allocations:
+        goal_id = alloc.get("goalId")
+        amount = alloc.get("allocatedAmount", 0)
+        if amount > 0:
+            for goal in GOALS:
+                if goal["id"] == goal_id:
+                    goal["current_amount"] += amount
+                    break
 
 @app.post("/ocr/confirm")
 async def ocr_confirm(payload: TransactionConfirmRequest):
@@ -218,15 +246,159 @@ async def ocr_confirm(payload: TransactionConfirmRequest):
         "tax_metadata": {
             "tax": payload.tax,
             "service_charge": payload.service_charge
-        }
+        },
+        "goalAllocation": payload.goalAllocation
     }
     
-    if payload.source == "GXBank":
-        BANK_ACCOUNT["transactions"].insert(0, new_tx)
-        BANK_ACCOUNT["balance"] += new_tx["amount"]
-    else:
-        WALLET_ACCOUNT["transactions"].insert(0, new_tx)
-        WALLET_ACCOUNT["balance"] += new_tx["amount"]
+    new_tx["source"] = payload.source
+    TRANSACTIONS.insert(0, new_tx)
+    process_goal_allocation(payload.goalAllocation)
         
     return {"status": "success", "transaction": new_tx}
+
+class ManualTransactionRequest(BaseModel):
+    merchant: str
+    amount: float
+    type: str = "expense"
+    category: str = "Other"
+    source: str = "GrabPay"
+    goalAllocation: list = []
+
+@app.post("/transactions")
+def add_transaction(payload: ManualTransactionRequest):
+    new_tx = {
+        "id": f"tx_{uuid.uuid4().hex[:6]}",
+        "date": str(date.today()),
+        "merchant": payload.merchant,
+        "amount": payload.amount if payload.type == "income" else -abs(payload.amount),
+        "type": payload.type,
+        "category": payload.category,
+        "source": payload.source,
+        "goalAllocation": payload.goalAllocation
+    }
+    TRANSACTIONS.insert(0, new_tx)
+    process_goal_allocation(payload.goalAllocation)
+    return {"status": "success", "transaction": new_tx}
+
+@app.get("/transactions")
+def get_transactions():
+    from services.transactions import unified_transactions
+    return unified_transactions()
+
+@app.delete("/transactions/{tx_id}")
+def delete_transaction(tx_id: str):
+    global TRANSACTIONS
+    tx_to_delete = next((tx for tx in TRANSACTIONS if tx["id"] == tx_id), None)
+    if not tx_to_delete:
+        return {"status": "error", "message": "Transaction not found"}, 404
+        
+    # Rollback goal allocations
+    if "goalAllocation" in tx_to_delete:
+        for alloc in tx_to_delete["goalAllocation"]:
+            goal_id = alloc.get("goalId")
+            amount = alloc.get("allocatedAmount", 0)
+            if amount > 0:
+                for goal in GOALS:
+                    if goal["id"] == goal_id:
+                        goal["current_amount"] = max(0, goal["current_amount"] - amount)
+                        break
+
+    TRANSACTIONS = [tx for tx in TRANSACTIONS if tx["id"] != tx_id]
+    return {"status": "success"}
+
+class TransactionPatchRequest(BaseModel):
+    amount: float = None
+    merchant: str = None
+    category: str = None
+    goalAllocation: list = None
+
+@app.patch("/transactions/{tx_id}")
+def update_transaction(tx_id: str, payload: TransactionPatchRequest):
+    tx_to_update = next((tx for tx in TRANSACTIONS if tx["id"] == tx_id), None)
+    if not tx_to_update:
+        return {"status": "error", "message": "Transaction not found"}, 404
+
+    # Handle goal allocation adjustments if changed
+    if payload.goalAllocation is not None:
+        # Rollback old
+        if "goalAllocation" in tx_to_update:
+            for alloc in tx_to_update["goalAllocation"]:
+                for goal in GOALS:
+                    if goal["id"] == alloc.get("goalId"):
+                        goal["current_amount"] = max(0, goal["current_amount"] - alloc.get("allocatedAmount", 0))
+        # Apply new
+        tx_to_update["goalAllocation"] = payload.goalAllocation
+        process_goal_allocation(payload.goalAllocation)
+
+    if payload.amount is not None:
+        tx_to_update["amount"] = payload.amount if tx_to_update["type"] == "income" else -abs(payload.amount)
+    if payload.merchant is not None:
+        tx_to_update["merchant"] = payload.merchant
+    if payload.category is not None:
+        tx_to_update["category"] = payload.category
+
+    return {"status": "success", "transaction": tx_to_update}
+
+@app.get("/dashboard-summary")
+def dashboard_summary():
+    return intelligence_snapshot()
+
+@app.get("/analytics")
+def analytics():
+    return spending_summary()
+
+@app.get("/goals")
+def get_goals():
+    return GOALS
+
+class GoalRequest(BaseModel):
+    name: str
+    target_amount: float
+    target_date: str = ""
+    category: str = "General"
+    
+@app.post("/goals")
+def create_goal(payload: GoalRequest):
+    new_goal = {
+        "id": f"goal_{uuid.uuid4().hex[:6]}",
+        "name": payload.name,
+        "target_amount": payload.target_amount,
+        "current_amount": 0.0,
+        "monthly_contribution": 0.0,
+        "target_date": payload.target_date or str(date.today() + timedelta(days=365)),
+        "category": payload.category
+    }
+    GOALS.append(new_goal)
+    return {"status": "success", "goal": new_goal}
+
+class GoalPatchRequest(BaseModel):
+    current_amount: float = None
+    name: str = None
+    target_amount: float = None
+
+@app.patch("/goals/{goal_id}")
+def update_goal(goal_id: str, payload: GoalPatchRequest):
+    for goal in GOALS:
+        if goal["id"] == goal_id:
+            if payload.current_amount is not None:
+                goal["current_amount"] = payload.current_amount
+            if payload.name is not None:
+                goal["name"] = payload.name
+            if payload.target_amount is not None:
+                goal["target_amount"] = payload.target_amount
+            return {"status": "success", "goal": goal}
+    return {"status": "error", "message": "Goal not found"}, 404
+
+@app.delete("/goals/{goal_id}")
+def delete_goal(goal_id: str):
+    global GOALS
+    original_length = len(GOALS)
+    GOALS[:] = [g for g in GOALS if g["id"] != goal_id]
+    if len(GOALS) < original_length:
+        return {"status": "success"}
+    return {"status": "error", "message": "Goal not found"}, 404
+
+@app.get("/loans")
+def get_loans():
+    return LOAN_ACCOUNT["loans"]
 

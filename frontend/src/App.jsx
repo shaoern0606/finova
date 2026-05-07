@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { api, post } from "./api.js";
 import FloatingChat from "./components/FloatingChat.jsx";
 import Nav from "./components/Nav.jsx";
@@ -6,23 +6,114 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Simulation from "./pages/Simulation.jsx";
 import ReceiptScanner from "./pages/ReceiptScanner.jsx";
 
+const money = (value) => {
+  const n = Number(value || 0);
+  const sign = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  return `${sign}RM${abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 export default function App() {
   const [page, setPage] = useState("dashboard");
   const [data, setData] = useState(null);
   const [demoResult, setDemoResult] = useState("");
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationStatus, setLocationStatus] = useState("pending"); // pending | granted | denied
+  const watchIdRef = useRef(null);
+  const debounceRef = useRef(null);
 
-  async function load() {
+  // ── fetch dashboard data ────────────────────────────────────
+  async function loadDashboard() {
     const snapshot = await api("/data/all");
     setData(snapshot);
   }
 
-  useEffect(() => {
-    load().catch(() => setDemoResult("Backend is not reachable yet. Start FastAPI on http://localhost:8000."));
+  // ── fetch merchants for a given lat/lng ───────────────────
+  const fetchMerchants = useCallback(async (lat, lng, category = null) => {
+    try {
+      const payload = { lat, lng };
+      if (category && category !== "All") payload.category = category;
+      const recs = await post("/nearby-merchants", payload);
+      setData(prev => prev ? { ...prev, recommendations: recs } : prev);
+    } catch (e) {
+      console.error("[FinMate] Failed to load nearby merchants", e);
+    }
   }, []);
+
+  // ── GPS success handler (shared between watch + one-time) ──
+  const onGpsSuccess = useCallback((pos) => {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    const loc = { lat, lng, accuracy: pos.coords.accuracy };
+
+    setUserLocation(prev => {
+      // Only update if moved > ~20m to avoid jitter
+      if (prev && Math.abs(prev.lat - lat) < 0.0002 && Math.abs(prev.lng - lng) < 0.0002) {
+        return prev;
+      }
+      return loc;
+    });
+
+    setLocationStatus("granted");
+
+    // Debounce merchant re-fetch on movement
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchMerchants(lat, lng);
+    }, 500);
+  }, [fetchMerchants]);
+
+  const onGpsError = useCallback((err) => {
+    console.warn("[FinMate] GPS denied or unavailable:", err.message);
+    setLocationStatus("denied");
+  }, []);
+
+  // ── start GPS watching ─────────────────────────────────────
+  function startGpsWatch() {
+    if (!navigator.geolocation) {
+      setLocationStatus("denied");
+      return;
+    }
+    // One-time immediate fetch
+    navigator.geolocation.getCurrentPosition(onGpsSuccess, onGpsError, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+    });
+    // Continuous watch
+    watchIdRef.current = navigator.geolocation.watchPosition(onGpsSuccess, onGpsError, {
+      enableHighAccuracy: true,
+      maximumAge: 15000,   // accept cached position up to 15s old
+      timeout: 10000,
+    });
+  }
+
+  useEffect(() => {
+    loadDashboard().catch(() =>
+      setDemoResult("Backend is not reachable yet. Start FastAPI on http://localhost:8000.")
+    );
+    startGpsWatch();
+
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+      clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function load() {
+    await loadDashboard();
+    if (userLocation) {
+      await fetchMerchants(userLocation.lat, userLocation.lng);
+    }
+  }
 
   async function demoSalary() {
     const result = await post("/automation/salary", {});
-    setDemoResult(`${result.message} Needs RM${result.needs}, wants RM${result.wants}, savings RM${result.savings}.`);
+    setDemoResult(
+      `${result.message} Needs ${money(result.needs)}, wants ${money(result.wants)}, savings ${money(result.savings)}.`
+    );
   }
 
   async function demoOverspend() {
@@ -33,9 +124,23 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f6fbf8] pb-20 md:pb-0 relative">
       <Nav active={page} onChange={setPage} />
-      {page === "dashboard" && <Dashboard data={data} onDemoSalary={demoSalary} onDemoOverspend={demoOverspend} demoResult={demoResult} />}
+      {page === "dashboard" && (
+        <Dashboard
+          data={data}
+          onDemoSalary={demoSalary}
+          onDemoOverspend={demoOverspend}
+          demoResult={demoResult}
+          onUpdate={load}
+          onDataUpdate={setData}
+          userLocation={userLocation}
+          locationStatus={locationStatus}
+          onRefreshMerchants={fetchMerchants}
+        />
+      )}
       {page === "simulation" && <Simulation data={data} />}
-      {page === "scanner" && <ReceiptScanner onTransactionSaved={async () => { await load(); setPage("dashboard"); }} />}
+      {page === "scanner" && (
+        <ReceiptScanner onTransactionSaved={async () => { await load(); setPage("dashboard"); }} />
+      )}
       <FloatingChat />
     </div>
   );

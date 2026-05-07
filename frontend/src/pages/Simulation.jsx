@@ -2,7 +2,7 @@ import { useState } from "react";
 import { post } from "../api.js";
 import Card from "../components/Card.jsx";
 
-const money = (value) => `RM${Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+const money = (value) => `RM${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function Simulation({ data }) {
   const [purchaseAmount, setPurchaseAmount] = useState(500);
