@@ -347,8 +347,6 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
             <button onClick={() => setMapMode(!mapMode)} className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-bold shadow-md transition-colors ${mapMode ? "bg-red-500 text-white" : "bg-gx-500 text-white"}`}>
               <MapPin size={18} /> {mapMode ? "Exit Map Mode" : "Map Mode"}
             </button>
-            <button onClick={onDemoSalary} className="rounded-lg bg-white px-4 py-3 text-sm font-bold text-gx-900">Simulate Salary</button>
-            <button onClick={onDemoOverspend} className="rounded-lg bg-emerald-400 px-4 py-3 text-sm font-bold text-gx-900">Simulate Overspending</button>
             <button onClick={handleResetData} className="rounded-lg border-2 border-red-400 bg-transparent px-4 py-3 text-sm font-bold text-red-400 hover:bg-red-400 hover:text-white transition-all">Reset Demo Data</button>
           </div>
         </div>
@@ -376,58 +374,67 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
         <Card title="Daily Average" value={money(data.summary.daily_average)} />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
         <Card>
           <ScoreRing data={data.score} />
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div className="mt-4 flex flex-wrap gap-3 text-sm justify-center">
             <span className="chip">Risk: {data.behavior.classification}</span>
             <span className="chip">Low balance in {data.prediction.days_until_low_balance} days</span>
           </div>
         </Card>
         <Card title="Predictive Alerts">
           <div className="mt-3 space-y-3">
-            <div className="flex gap-3 rounded-lg bg-red-50 p-3 text-sm text-red-900">
-              <AlertTriangle size={18} />
-              Overspending risk is {data.prediction.overspending_risk}; projected monthly spend is {money(data.prediction.monthly_spend_projection)}.
-            </div>
-            {warnings.map((item) => (
-              <div key={item.category} className="rounded-lg bg-emerald-50 p-3 text-sm text-gx-900">
-                <b>{item.category}</b>: {item.warning} {item.suggestion}
+            <div className="flex gap-3 rounded-lg bg-red-50 p-3 text-sm text-red-900 border border-red-100">
+              <AlertTriangle size={18} className="shrink-0" />
+              <div>
+                <p className="font-bold">Overspending Risk</p>
+                <p>Projection: {money(data.prediction.monthly_spend_projection)} — {data.prediction.overspending_risk}</p>
               </div>
-            ))}
+            </div>
+            <div className="grid gap-2">
+              {warnings.map((item) => (
+                <div key={item.category} className="rounded-lg bg-emerald-50 p-2.5 text-xs text-gx-900 border border-emerald-100">
+                  <span className="font-black uppercase tracking-wider text-[9px] text-gx-600 block mb-0.5">{item.category}</span>
+                  {item.warning} {item.suggestion}
+                </div>
+              ))}
+            </div>
           </div>
         </Card>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
         <Card title="Spending Mix">
-          <SpendingPie breakdown={data.summary.category_breakdown} />
-        </Card>
-        <Card title="Category Breakdown">
-          <CategoryBars breakdown={data.summary.category_breakdown} />
-        </Card>
-      </section>
-
-      {/* Hierarchical drill-down analytics */}
-      <section className="card p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-black text-gx-900">Spending Intelligence</h2>
-          <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">Click category to drill down</span>
-        </div>
-        <p className="text-xs text-slate-500 mt-1">Hierarchical breakdown — main category → sub-category level</p>
-        <HierarchicalBreakdown
-          mainBreakdown={data.summary.category_breakdown}
-          subBreakdown={data.summary.sub_category_breakdown || {}}
-        />
-        {data.summary.behavioral_insights?.length > 0 && (
-          <div className="mt-4">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Behavioral AI Insights</p>
-            <BehavioralInsights
-              insights={data.summary.behavioral_insights || []}
-              tagCounts={data.summary.behavioral_tag_counts || {}}
-            />
+          <div className="h-[300px] flex items-center justify-center">
+            <SpendingPie breakdown={data.summary.category_breakdown} />
           </div>
-        )}
+        </Card>
+
+        {/* Hierarchical drill-down analytics */}
+        <Card>
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h2 className="text-lg font-black text-gx-900">Spending Intelligence</h2>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Hierarchical breakdown</p>
+            </div>
+            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">Interactive</span>
+          </div>
+          
+          <HierarchicalBreakdown
+            mainBreakdown={data.summary.category_breakdown}
+            subBreakdown={data.summary.sub_category_breakdown || {}}
+          />
+          
+          {data.summary.behavioral_insights?.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-slate-100">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Behavioral AI Patterns</p>
+              <BehavioralInsights
+                insights={data.summary.behavioral_insights || []}
+                tagCounts={data.summary.behavioral_tag_counts || {}}
+              />
+            </div>
+          )}
+        </Card>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">

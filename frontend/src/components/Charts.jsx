@@ -32,20 +32,7 @@ const fmt = (v) => `RM${Math.abs(Number(v || 0)).toLocaleString("en-US", {
   minimumFractionDigits: 2, maximumFractionDigits: 2,
 })}`;
 
-// Custom pie label
-const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, name, percent }) => {
-  if (percent < 0.05) return null;
-  const RADIAN = Math.PI / 180;
-  const r = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + r * Math.cos(-midAngle * RADIAN);
-  const y = cy + r * Math.sin(-midAngle * RADIAN);
-  return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central"
-      fontSize={9} fontWeight="bold">
-      {name.split(" / ")[0].slice(0, 8)}
-    </text>
-  );
-};
+
 
 export function SpendingPie({ breakdown = {} }) {
   const data = Object.entries(breakdown).map(([name, value]) => ({ name, value }));
@@ -59,7 +46,6 @@ export function SpendingPie({ breakdown = {} }) {
           outerRadius={85}
           paddingAngle={3}
           labelLine={false}
-          label={renderLabel}
         >
           {data.map((entry, index) => (
             <Cell key={entry.name} fill={getColor(entry.name, index)} />
