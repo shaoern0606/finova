@@ -78,17 +78,11 @@ export default function SmartMap({
 
   const CATEGORIES = [
     "All",
-    "Food & Beverage", "Transport", "Shopping", "Health & Wellness",
-    "Entertainment", "Living Expenses", "Education", "Travel",
-    "Local Hawker", "Street Food", "Caf\u00e9 / Coffee", "Fast Food", "Food Delivery",
-    "Grocery", "Convenience Store", "Night Market",
-    "Public Transport", "Ride-hailing", "Fuel",
-    "Pharmacy", "Medical / Clinic", "Fitness / Gym",
-    "Fashion / Clothing", "Movies",
+    "Food", "Transport", "Grocery", "Shopping"
   ];
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const center = location ? [location.lat, location.lng] : [3.1330, 101.6870];
+  const center = location ? [location.lat, location.lng] : [3.1390, 101.6869];
 
   const filteredRecs = categoryFilter === "All"
     ? recommendations
@@ -174,8 +168,8 @@ export default function SmartMap({
         style={{ minHeight: 400 }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapFlyTo center={center} zoom={15} />
 
@@ -240,7 +234,7 @@ export default function SmartMap({
 
       {/* ── Merchant detail card ── */}
       {selectedMerchant && (
-        <div className="absolute bottom-4 right-4 z-[400] w-80 bg-white rounded-2xl shadow-2xl p-4 border border-slate-100 animate-in slide-in-from-right-4 fade-in duration-200">
+        <div className="absolute bottom-4 right-4 z-[400] w-72 bg-white rounded-2xl shadow-2xl p-4 border border-slate-100 animate-in slide-in-from-right-4 fade-in duration-200">
           <button
             onClick={() => setSelectedMerchant(null)}
             className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition"
@@ -248,60 +242,23 @@ export default function SmartMap({
             <X size={14} />
           </button>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gx-600 px-2 py-0.5 bg-emerald-50 rounded-full border border-emerald-100">
-              {selectedMerchant.category}
-            </span>
-            {selectedMerchant.sub_category && selectedMerchant.sub_category !== selectedMerchant.category && (
-              <span className="text-[10px] font-bold text-slate-500 px-2 py-0.5 bg-slate-100 rounded-full">
-                {selectedMerchant.sub_category}
-              </span>
-            )}
-            <span className="text-[10px] text-slate-500 font-bold flex items-center gap-0.5">
-              <MapPin size={10} /> {selectedMerchant.distance_km}km away
-            </span>
-            {selectedMerchant.tags?.map(tag => (
-              <span key={tag} className="text-[9px] font-black text-white bg-slate-800 px-2 py-0.5 rounded-full">
-                {tag}
-              </span>
-            ))}
+          <h3 className="text-lg font-black text-slate-900 pr-6 leading-tight mb-1">{selectedMerchant.name}</h3>
+          
+          <div className="flex items-center gap-1 text-xs text-slate-500 font-bold mb-3">
+            <MapPin size={12} /> {selectedMerchant.distance_km}km away
           </div>
 
-          <h3 className="text-base font-black text-slate-900 mt-2 pr-6 leading-tight">{selectedMerchant.name}</h3>
-          <p className="text-xs text-slate-500 mt-0.5 font-medium">{selectedMerchant.perk}</p>
-
-          <div className={`mt-3 p-3 rounded-xl flex gap-3 ${
-            selectedMerchant.color === "green" ? "bg-emerald-50 border border-emerald-100 text-emerald-900"
-            : selectedMerchant.color === "yellow" ? "bg-amber-50 border border-amber-100 text-amber-900"
-            : "bg-red-50 border border-red-100 text-red-900"
-          }`}>
-            <Info size={15} className="mt-0.5 flex-shrink-0 opacity-70" />
-            <div>
-              <p className="text-[9px] font-black uppercase tracking-wider opacity-60">AI Recommendation</p>
-              <p className="text-xs font-semibold mt-0.5 leading-relaxed">{selectedMerchant.reason}</p>
-            </div>
+          <div className="bg-emerald-50 text-emerald-900 border border-emerald-100 rounded-lg p-3 mb-3">
+            <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600 mb-0.5">Estimated Savings</p>
+            <p className="text-xl font-black">
+              {selectedMerchant.estimated_savings > 0 ? "+" : ""}RM{selectedMerchant.estimated_savings}
+            </p>
           </div>
 
-          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-            <div className="bg-slate-50 rounded-lg p-2">
-              <p className="text-[9px] font-bold uppercase text-slate-400">Est. Price</p>
-              <p className="text-sm font-black text-slate-700">RM{selectedMerchant.avg_spend}</p>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-2">
-              <p className="text-[9px] font-bold uppercase text-slate-400">You Save</p>
-              <p className={`text-sm font-black ${selectedMerchant.estimated_savings > 0 ? "text-emerald-600" : "text-slate-400"}`}>
-                {selectedMerchant.estimated_savings > 0 ? "+" : ""}RM{selectedMerchant.estimated_savings}
-              </p>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-2">
-              <p className="text-[9px] font-bold uppercase text-slate-400">AI Score</p>
-              <p className="text-sm font-black text-gx-600">{Math.round((selectedMerchant.confidence ?? 0.7) * 100)}%</p>
-            </div>
+          <div className="flex gap-2 items-start text-slate-600">
+            <Info size={14} className="mt-0.5 flex-shrink-0 text-gx-500" />
+            <p className="text-xs font-medium leading-snug">{selectedMerchant.reason}</p>
           </div>
-
-          <p className="text-[9px] text-slate-400 mt-2 text-right font-mono">
-            #{filteredRecs.findIndex(r => r.id === selectedMerchant.id) + 1} of {filteredRecs.length}
-          </p>
         </div>
       )}
     </div>
