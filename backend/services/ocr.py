@@ -28,7 +28,7 @@ def extract_receipt_data(image_path: str):
     - total: The FINAL TOTAL PAID, including subtotal, all taxes, service charges, and rounding adjustments (float). Prioritize GRAND TOTAL, NET TOTAL, or AMOUNT PAID.
     - currency: Currency code (e.g., MYR, USD, SGD)
     - payment_method: Cash, Credit Card, E-wallet, etc.
-    - category: Suggest one of [Food, Transport, Shopping, Entertainment, Utilities, Healthcare, Other]
+    - category: Suggest one of [Food, Transport, Shopping, Bills, Other]
     - items: A list of objects with 'name' and 'price' (float)
     
     Return ONLY the JSON object.

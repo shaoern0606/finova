@@ -1,4 +1,4 @@
-import { Camera, Check, FileText, Loader2, UploadCloud, X, Plus, Trash2, Aperture, RefreshCw, Target } from "lucide-react";
+import { Camera, Check, FileText, Loader2, UploadCloud, X, Plus, Trash2, Aperture, RefreshCw } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { API_BASE, post, api } from "../api.js";
 
@@ -29,19 +29,9 @@ export default function ReceiptScanner({ onTransactionSaved }) {
   const [serviceCharge, setServiceCharge] = useState(0);
   const [showMetadata, setShowMetadata] = useState(false);
 
-  // Goals state
-  const [goals, setGoals] = useState([]);
-  const [goalAllocations, setGoalAllocations] = useState([]);
-  const [showNewGoal, setShowNewGoal] = useState(false);
-  const [newGoalName, setNewGoalName] = useState("");
-  const [newGoalTarget, setNewGoalTarget] = useState("");
+  const categories = ["Food", "Transport", "Shopping", "Bills", "Other"];
 
-  const categories = ["Food", "Transport", "Shopping", "Entertainment", "Utilities", "Healthcare", "Other"];
 
-  // Fetch Goals
-  useEffect(() => {
-    api("/goals").then(setGoals).catch(console.error);
-  }, []);
 
   // Handle Camera initialization
   useEffect(() => {
@@ -168,8 +158,6 @@ export default function ReceiptScanner({ onTransactionSaved }) {
     setCategory("Other");
     setCustomCategory("");
     setItems([]);
-    setGoalAllocations([]);
-    setShowNewGoal(false);
     setUseCamera(false);
   };
 
@@ -192,7 +180,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
         raw_text: rawText,
         tax: tax,
         service_charge: serviceCharge,
-        goalAllocation: goalAllocations.filter(g => g.allocatedAmount > 0)
+        type: "expense"
       };
 
       await post("/ocr/confirm", payload);
@@ -235,42 +223,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  // Goal Management
-  const totalAllocated = goalAllocations.reduce((sum, g) => sum + (parseFloat(g.allocatedAmount) || 0), 0);
-  const unallocatedAmount = Math.max(0, (parseFloat(amount) || 0) - totalAllocated);
 
-  const handleCreateNewGoal = async () => {
-    if (!newGoalName || !newGoalTarget) return;
-    try {
-      const result = await post("/goals", { name: newGoalName, target_amount: parseFloat(newGoalTarget) });
-      setGoals([...goals, result.goal]);
-      addGoalAllocation(result.goal.id);
-      setShowNewGoal(false);
-      setNewGoalName("");
-      setNewGoalTarget("");
-    } catch (e) {
-      setError("Failed to create new goal");
-    }
-  };
-
-  const addGoalAllocation = (goalId) => {
-    if (!goalId) return;
-    if (goalAllocations.find(g => g.goalId === goalId)) return;
-    const goal = goals.find(g => g.id === goalId);
-    if (goal) {
-      setGoalAllocations([...goalAllocations, { goalId: goal.id, goalName: goal.name, allocatedAmount: unallocatedAmount > 0 ? unallocatedAmount : 0 }]);
-    }
-  };
-
-  const updateGoalAllocation = (index, value) => {
-    const newAlloc = [...goalAllocations];
-    newAlloc[index].allocatedAmount = parseFloat(value) || 0;
-    setGoalAllocations(newAlloc);
-  };
-
-  const removeGoalAllocation = (index) => {
-    setGoalAllocations(goalAllocations.filter((_, i) => i !== index));
-  };
 
   return (
     <div className="space-y-4 px-6 pt-10 pb-6">
@@ -535,65 +488,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                   )}
                 </div>
 
-                <div className="pt-4 border-t border-slate-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-semibold text-slate-700">Savings Goal Allocation (Optional)</label>
-                  </div>
 
-                  <div className="space-y-3">
-                    {goalAllocations.map((alloc, index) => (
-                      <div key={index} className="flex gap-3 items-center bg-slate-50 p-2 rounded-lg border border-slate-200">
-                        <Target size={16} className="text-gx-500 ml-1" />
-                        <span className="flex-1 text-sm font-semibold text-slate-700">{alloc.goalName}</span>
-                        <div className="w-24 relative">
-                          <span className="absolute left-2 top-1.5 text-xs text-slate-400 font-medium">RM</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={alloc.allocatedAmount}
-                            onChange={(e) => updateGoalAllocation(index, e.target.value)}
-                            className="w-full rounded bg-white pl-7 pr-2 py-1.5 text-sm font-bold text-gx-900 focus:outline-none focus:ring-1 focus:ring-gx-500"
-                          />
-                        </div>
-                        <button onClick={() => removeGoalAllocation(index)} className="p-1.5 text-slate-400 hover:text-red-500 transition">
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-
-                    {showNewGoal ? (
-                      <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200 space-y-3">
-                        <input type="text" placeholder="Goal Name (e.g. Vacation)" value={newGoalName} onChange={e => setNewGoalName(e.target.value)} className="w-full text-sm p-2 rounded border border-emerald-200" />
-                        <input type="number" placeholder="Target Amount (RM)" value={newGoalTarget} onChange={e => setNewGoalTarget(e.target.value)} className="w-full text-sm p-2 rounded border border-emerald-200" />
-                        <div className="flex gap-2">
-                          <button onClick={() => setShowNewGoal(false)} className="flex-1 text-xs py-2 text-slate-500 font-bold bg-white rounded border border-slate-200">Cancel</button>
-                          <button onClick={handleCreateNewGoal} className="flex-1 text-xs py-2 text-white font-bold bg-gx-500 rounded">Create & Select</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <select
-                          onChange={(e) => { addGoalAllocation(e.target.value); e.target.value = ""; }}
-                          className="flex-1 text-sm p-2 rounded-lg border border-slate-200 bg-white"
-                          defaultValue=""
-                        >
-                          <option value="" disabled>Select Goal to Allocate...</option>
-                          {goals.filter(g => !goalAllocations.find(a => a.goalId === g.id)).map(g => (
-                            <option key={g.id} value={g.id}>{g.name}</option>
-                          ))}
-                        </select>
-                        <button onClick={() => setShowNewGoal(true)} className="px-3 text-xs font-bold bg-slate-100 text-slate-600 rounded-lg whitespace-nowrap">
-                          + New Goal
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-3 flex justify-between text-xs font-semibold px-1">
-                    <span className="text-slate-500">Unallocated Amount:</span>
-                    <span className={unallocatedAmount < 0 ? "text-red-500" : "text-gx-600"}>RM {unallocatedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
               </div>
             )}
 

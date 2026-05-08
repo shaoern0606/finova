@@ -67,10 +67,26 @@ INITIAL_LOAN_ACCOUNT = {
     ],
 }
 
+INITIAL_INVESTMENTS = [
+    {
+        "id": "inv_1",
+        "name": "ASB (Amanah Saham)",
+        "amount_invested": 10000.0,
+        "current_value": 10850.0,
+    },
+    {
+        "id": "inv_2",
+        "name": "StashAway ETF",
+        "amount_invested": 5000.0,
+        "current_value": 4720.0,
+    },
+]
+
 # ── MUTABLE STATE ────────────────────────────────────────────
 GOALS = copy.deepcopy(INITIAL_GOALS)
 TRANSACTIONS = copy.deepcopy(INITIAL_TRANSACTIONS)
 LOAN_ACCOUNT = copy.deepcopy(INITIAL_LOAN_ACCOUNT)
+INVESTMENTS = copy.deepcopy(INITIAL_INVESTMENTS)
 
 BANK_ACCOUNT = {
     "source": "GXBank",
@@ -100,9 +116,10 @@ PEER_AVERAGES = {
 
 def reset_all_data():
     """Restores all mutable lists and dicts to their deep-copied initial state."""
-    global GOALS, TRANSACTIONS, LOAN_ACCOUNT
+    global GOALS, TRANSACTIONS, LOAN_ACCOUNT, INVESTMENTS
     GOALS[:] = copy.deepcopy(INITIAL_GOALS)
     TRANSACTIONS[:] = copy.deepcopy(INITIAL_TRANSACTIONS)
+    INVESTMENTS[:] = copy.deepcopy(INITIAL_INVESTMENTS)
     # For dictionaries, we clear and update
     LOAN_ACCOUNT.clear()
     LOAN_ACCOUNT.update(copy.deepcopy(INITIAL_LOAN_ACCOUNT))

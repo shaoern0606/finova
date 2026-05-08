@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from datetime import date, timedelta
 import uuid
 
-from data import BANK_ACCOUNT, GOALS, LOAN_ACCOUNT, USER, WALLET_ACCOUNT, TRANSACTIONS, reset_all_data
+from data import BANK_ACCOUNT, GOALS, LOAN_ACCOUNT, USER, WALLET_ACCOUNT, TRANSACTIONS, INVESTMENTS, reset_all_data
 from graph import build_graph
 from services.automation import automation_actions, salary_split
 from services.behavior import classify_behavior
@@ -79,6 +79,7 @@ def intelligence_snapshot():
         "peer": compare_to_peers(summary, USER),
         "automation": automation_actions(summary, prediction, USER),
         "recommendations": merchant_recommendations(summary),
+        "investments": INVESTMENTS,
     }
 
 
@@ -401,4 +402,55 @@ def delete_goal(goal_id: str):
 @app.get("/loans")
 def get_loans():
     return LOAN_ACCOUNT["loans"]
+
+
+# ── INVESTMENTS ──────────────────────────────────────────────
+
+class InvestmentRequest(BaseModel):
+    name: str
+    amount_invested: float
+    current_value: float
+
+class InvestmentPatchRequest(BaseModel):
+    name: str = None
+    amount_invested: float = None
+    current_value: float = None
+
+@app.get("/investments")
+def get_investments():
+    return INVESTMENTS
+
+@app.post("/investments")
+def add_investment(payload: InvestmentRequest):
+    new_inv = {
+        "id": f"inv_{uuid.uuid4().hex[:6]}",
+        "name": payload.name,
+        "amount_invested": payload.amount_invested,
+        "current_value": payload.current_value
+    }
+    INVESTMENTS.append(new_inv)
+    return {"status": "success", "investment": new_inv}
+
+@app.patch("/investments/{inv_id}")
+def update_investment(inv_id: str, payload: InvestmentPatchRequest):
+    for inv in INVESTMENTS:
+        if inv["id"] == inv_id:
+            if payload.name is not None:
+                inv["name"] = payload.name
+            if payload.amount_invested is not None:
+                inv["amount_invested"] = payload.amount_invested
+            if payload.current_value is not None:
+                inv["current_value"] = payload.current_value
+            return {"status": "success", "investment": inv}
+    return {"status": "error", "message": "Investment not found"}, 404
+
+@app.delete("/investments/{inv_id}")
+def delete_investment(inv_id: str):
+    global INVESTMENTS
+    original_len = len(INVESTMENTS)
+    INVESTMENTS[:] = [i for i in INVESTMENTS if i["id"] != inv_id]
+    if len(INVESTMENTS) < original_len:
+        return {"status": "success"}
+    return {"status": "error", "message": "Investment not found"}, 404
+
 

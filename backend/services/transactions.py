@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import date
 
-from data import BANK_ACCOUNT, LOAN_ACCOUNT, WALLET_ACCOUNT, TRANSACTIONS
+from data import BANK_ACCOUNT, LOAN_ACCOUNT, WALLET_ACCOUNT, TRANSACTIONS, INVESTMENTS, GOALS
 from services.categories import classify, PEER_AVERAGES_HIER
 
 
@@ -101,5 +101,19 @@ def spending_summary():
 
 def combined_balance():
     debt = sum(loan["outstanding"] for loan in LOAN_ACCOUNT["loans"])
-    assets = sum(tx["amount"] for tx in TRANSACTIONS)
-    return {"assets": round(assets, 2), "debt": round(debt, 2), "net_worth": round(assets - debt, 2)}
+    cash = sum(tx["amount"] for tx in TRANSACTIONS)
+    investment_value = sum(inv["current_value"] for inv in INVESTMENTS)
+    savings_total = sum(goal["current_amount"] for goal in GOALS)
+    
+    # Net Worth = Savings + Investments + Cash - Debt
+    # (Note: In this app, 'cash' from transactions already includes what's allocated to goals?
+    #  Actually, usually goals are subset of cash, but here we treat them as separate 'buckets' for the UI)
+    
+    return {
+        "cash": round(cash, 2),
+        "savings": round(savings_total, 2),
+        "debt": round(debt, 2),
+        "investments": round(investment_value, 2),
+        "assets": round(cash + savings_total + investment_value, 2),
+        "net_worth": round(cash + savings_total + investment_value - debt, 2)
+    }

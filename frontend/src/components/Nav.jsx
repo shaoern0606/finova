@@ -1,15 +1,16 @@
-import { Bot, Gauge, Sparkles, Scan } from "lucide-react";
+import { Bot, Gauge, Sparkles, Scan, LineChart } from "lucide-react";
 
 const items = [
-  { id: "dashboard", label: "Dashboard", icon: Gauge },
-  { id: "simulation", label: "Simulation", icon: Sparkles },
-  { id: "scanner", label: "Scanner", icon: Scan }
+  { id: "dashboard", label: "Insights", icon: Gauge },
+  { id: "investments", label: "Wealth", icon: LineChart },
+  { id: "simulation", label: "What If", icon: Sparkles },
+  { id: "scanner", label: "Scan", icon: Scan }
 ];
 
 export default function Nav({ active, onChange }) {
   return (
     <nav className="shrink-0 z-30 border-t border-slate-200 bg-white px-2 pb-3.5 pt-1.5">
-      <div className="grid w-full grid-cols-3 gap-1">
+      <div className="grid w-full grid-cols-4 gap-1">
         {items.map((item) => {
           const Icon = item.icon;
           const selected = active === item.id;

@@ -5,6 +5,7 @@ import Nav from "./components/Nav.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Simulation from "./pages/Simulation.jsx";
 import ReceiptScanner from "./pages/ReceiptScanner.jsx";
+import Investments from "./pages/Investments.jsx";
 
 const money = (value) => {
   const n = Number(value || 0);
@@ -124,7 +125,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-900 flex justify-center items-start md:items-center p-0 md:p-4">
       {/* Mobile Frame Container */}
-      <div className="w-full max-w-md min-h-screen md:min-h-[850px] md:h-[850px] bg-[#f6fbf8] shadow-2xl relative flex flex-col overflow-hidden md:rounded-[3rem] md:border-[8px] md:border-slate-800">
+      <div className="w-[500px] h-[1050px] bg-[#f6fbf8] shadow-[0_30px_80px_rgba(0,0,0,0.35)] relative flex flex-col overflow-hidden mx-auto rounded-[45px] border-[12px] border-black">
 
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto no-scrollbar relative">
@@ -142,6 +143,7 @@ export default function App() {
             />
           )}
           {page === "simulation" && <Simulation data={data} />}
+          {page === "investments" && <Investments data={data} onUpdate={load} />}
           {page === "scanner" && (
             <ReceiptScanner onTransactionSaved={async () => { await load(); setPage("dashboard"); }} />
           )}
