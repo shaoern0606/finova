@@ -182,6 +182,11 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
                     <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Total Spent</p>
                     <p className="text-sm font-black text-gx-900">{money(data.coach.monthly_summary.total_spent)}</p>
                   </div>
+
+                </div>
+                <div className="mt-4 pt-3 border-t border-slate-100">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">AI Patterns</p>
+                  <BehavioralInsights insights={data.summary.behavioral_insights || []} tagCounts={data.summary.behavioral_tag_counts || {}} />
                 </div>
               </div>
 
@@ -259,22 +264,7 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
               <span className="text-[8px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">Interactive</span>
             </div>
             <HierarchicalBreakdown mainBreakdown={data.summary.category_breakdown} subBreakdown={data.summary.sub_category_breakdown || {}} />
-            {data.summary.behavioral_insights?.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-slate-100">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">AI Patterns</p>
-                <BehavioralInsights insights={data.summary.behavioral_insights || []} tagCounts={data.summary.behavioral_tag_counts || {}} />
-              </div>
-            )}
-          </Card>
-
-
-          <Card title="Smart Automations">
-            <div className="mt-2 space-y-2">
-              <div className="rounded-xl bg-indigo-50 p-3 text-xs text-indigo-900"><b>Projection:</b> {money(data.prediction.projected_monthly_savings)}/mo savings pace</div>
-              {data.automation.map((item, index) => (
-                <div key={index} className="flex gap-2 rounded-xl bg-slate-50 p-3 text-xs"><BadgeCheck size={16} className="text-gx-600 shrink-0" /><span className="min-w-0">{item.message}</span></div>
-              ))}
-            </div>
+            {data.summary.behavioral_insights?.length > 0}
           </Card>
 
           <section className="card p-4">
