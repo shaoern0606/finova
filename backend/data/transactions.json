@@ -1,0 +1,157 @@
+[
+  {
+    "id": "ocr_efec63",
+    "date": "2026-04-18",
+    "merchant": "RI PASTRY HOUSE (SUBANG) SDN. BHD.",
+    "amount": -11.25,
+    "type": "expense",
+    "category": "Food",
+    "receipt_url": "/uploads/receipts/3412ee9b-bcc0-40b2-8820-ca254fd74b38.jpg",
+    "items": [
+      {
+        "name": "MINI SAUSAGE BUN SPECIAL",
+        "price": 4.2
+      },
+      {
+        "name": "CHICKEN SLICE SPECIAL",
+        "price": 3.5
+      },
+      {
+        "name": "CHEESE STICK SPECIAL",
+        "price": 3
+      }
+    ],
+    "raw_text": "```json\n{\n  \"merchant\": \"RI PASTRY HOUSE (SUBANG) SDN. BHD.\",\n  \"date\": \"2026-04-18\",\n  \"time\": \"19:40\",\n  \"subtotal\": 10.70,\n  \"tax\": 0.54,\n  \"service_charge\": null,\n  \"total\": 11.25,\n  \"currency\": \"MYR\",\n  \"payment_method\": \"E-wallet\",\n  \"category\": \"Food\",\n  \"items\": [\n    {\n      \"name\": \"MINI SAUSAGE BUN SPECIAL\",\n      \"price\": 4.20\n    },\n    {\n      \"name\": \"CHICKEN SLICE SPECIAL\",\n      \"price\": 3.50\n    },\n    {\n      \"name\": \"CHEESE STICK SPECIAL\",\n      \"price\": 3.00\n    }\n  ]\n}\n```",
+    "tax_metadata": {
+      "tax": 0.54,
+      "service_charge": 0.0
+    },
+    "goalAllocation": [],
+    "source": "GrabPay"
+  },
+  {
+    "id": "ocr_4a63b5",
+    "date": "2026-05-09",
+    "merchant": "Persistent Test Store",
+    "amount": -35.75,
+    "type": "expense",
+    "category": "Food & Beverage",
+    "receipt_url": "",
+    "items": [
+      {
+        "name": "Burger",
+        "price": 20.0
+      },
+      {
+        "name": "Drink",
+        "price": 15.75
+      }
+    ],
+    "raw_text": "Persistent test receipt",
+    "tax_metadata": {
+      "tax": 0.0,
+      "service_charge": 0.0
+    },
+    "goalAllocation": [],
+    "source": "GrabPay"
+  },
+  {
+    "id": "tx_seed1",
+    "date": "2026-05-09",
+    "merchant": "GrabFood Nasi Lemak Co",
+    "amount": -22.9,
+    "type": "expense",
+    "main_category": "Food & Beverage",
+    "sub_category": "Food Delivery",
+    "behavioral_tag": "delivery_dependency",
+    "source": "GrabPay"
+  },
+  {
+    "id": "tx_seed2",
+    "date": "2026-05-08",
+    "merchant": "ZUS Coffee",
+    "amount": -14.5,
+    "type": "expense",
+    "main_category": "Food & Beverage",
+    "sub_category": "Caf\u00e9 / Coffee",
+    "behavioral_tag": "daily_habit",
+    "source": "GXBank"
+  },
+  {
+    "id": "tx_seed3",
+    "date": "2026-05-07",
+    "merchant": "Jaya Grocer",
+    "amount": -236.2,
+    "type": "expense",
+    "main_category": "Food & Beverage",
+    "sub_category": "Grocery",
+    "behavioral_tag": "essential",
+    "source": "GXBank"
+  },
+  {
+    "id": "tx_seed4",
+    "date": "2026-05-06",
+    "merchant": "Tenaga Nasional",
+    "amount": -168.4,
+    "type": "expense",
+    "main_category": "Living Expenses",
+    "sub_category": "Utilities",
+    "behavioral_tag": "essential",
+    "source": "GXBank"
+  },
+  {
+    "id": "tx_seed5",
+    "date": "2026-05-04",
+    "merchant": "Salary - Fintech Sdn Bhd",
+    "amount": 6200.0,
+    "type": "income",
+    "main_category": "Income",
+    "sub_category": "Employment Income",
+    "behavioral_tag": null,
+    "source": "GXBank"
+  },
+  {
+    "id": "tx_seed6",
+    "date": "2026-04-29",
+    "merchant": "Shopee Flash Sale",
+    "amount": -158.0,
+    "type": "expense",
+    "main_category": "Shopping",
+    "sub_category": "Online Shopping",
+    "behavioral_tag": "impulse",
+    "source": "GrabPay"
+  },
+  {
+    "id": "tx_seed7",
+    "date": "2026-04-27",
+    "merchant": "Grab Ride",
+    "amount": -18.5,
+    "type": "expense",
+    "main_category": "Transport",
+    "sub_category": "Ride-hailing",
+    "behavioral_tag": "convenience_spending",
+    "source": "GrabPay"
+  },
+  {
+    "id": "tx_seed8",
+    "date": "2026-04-26",
+    "merchant": "Starbucks KLCC",
+    "amount": -22.0,
+    "type": "expense",
+    "main_category": "Food & Beverage",
+    "sub_category": "Caf\u00e9 / Coffee",
+    "behavioral_tag": "daily_habit",
+    "source": "GXBank"
+  },
+  {
+    "id": "tx_seed9",
+    "date": "2026-04-24",
+    "merchant": "Initial Balance",
+    "amount": 4200.0,
+    "type": "income",
+    "main_category": "Income",
+    "sub_category": "Opening Balance",
+    "behavioral_tag": null,
+    "source": "GXBank"
+  }
+]

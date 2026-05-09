@@ -1,8 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import uuid
+import os
+import shutil
+from fastapi.staticfiles import StaticFiles
 
 from data import BANK_ACCOUNT, GOALS, LOAN_ACCOUNT, USER, WALLET_ACCOUNT, TRANSACTIONS, INVESTMENTS, reset_all_data
 from graph import build_graph
@@ -13,15 +16,11 @@ from services.forecast import savings_forecast
 from services.loan import evaluate_loan
 from services.peer import compare_to_peers
 from services.prediction import evaluate_purchase, predict
+from services.coach import analyze_behaviour_coach
 from services.recommendation import merchant_recommendations
 from services.scoring import credit_score
-from services.transactions import combined_balance, spending_summary
+from services.transactions import combined_balance, receipt_ai_analysis, spending_summary
 from services.ocr import extract_receipt_data, save_transaction_from_receipt
-from fastapi import File, UploadFile
-from fastapi.staticfiles import StaticFiles
-import shutil
-import uuid
-import os
 
 
 app = FastAPI(title="FINMATE OS - FinScope Edition", version="1.0.0")
@@ -52,11 +51,13 @@ class LoanRequest(BaseModel):
 class PurchaseRequest(BaseModel):
     amount: float
     merchant: str = "Demo Merchant"
+    category: str = "Shopping"
 
 
 class ChatRequest(BaseModel):
     message: str
     history: list[dict] = []
+    live_context: dict | None = None
 
 
 def intelligence_snapshot():
@@ -66,6 +67,8 @@ def intelligence_snapshot():
     score = credit_score(summary, behavior, balance, LOAN_ACCOUNT["loans"], USER)
     prediction = predict(summary, balance, USER)
     graph = build_graph(summary["category_breakdown"])
+    coach = analyze_behaviour_coach(TRANSACTIONS, USER, balance)
+    
     return {
         "user": USER,
         "balance": balance,
@@ -73,6 +76,7 @@ def intelligence_snapshot():
         "behavior": behavior,
         "score": score,
         "prediction": prediction,
+        "coach": coach,
         "goals": GOALS,
         "loans": LOAN_ACCOUNT["loans"],
         "graph": graph.as_dict(),
@@ -132,6 +136,8 @@ def prediction():
 @app.get("/peer")
 def peer():
     return compare_to_peers(spending_summary(), USER)
+
+
 @app.post("/reset")
 def reset_demo_data():
     reset_all_data()
@@ -152,6 +158,8 @@ def loan_evaluate(payload: LoanRequest):
 def purchase_intervention(payload: PurchaseRequest):
     result = evaluate_purchase(payload.amount, spending_summary(), combined_balance())
     result["merchant"] = payload.merchant
+    result["snapshot"] = intelligence_snapshot()
+    result["simulated"] = True
     return result
 
 
@@ -163,7 +171,20 @@ def automation():
 
 @app.post("/automation/salary")
 def salary_automation():
-    return salary_split(USER["monthly_income"])
+    result = salary_split(USER["monthly_income"])
+    new_tx = {
+        "id": f"auto_{uuid.uuid4().hex[:6]}",
+        "date": str(date.today()),
+        "merchant": "Salary Automation",
+        "amount": round(USER["monthly_income"] * 0.2, 2),
+        "type": "income",
+        "category": "Income",
+        "source": "Smart Automation",
+    }
+    TRANSACTIONS.insert(0, new_tx)
+    result["transaction"] = new_tx
+    result["snapshot"] = intelligence_snapshot()
+    return result
 
 
 class LocationRequest(BaseModel):
@@ -184,7 +205,10 @@ def recommendations(lat: float = None, lng: float = None, category: str = None):
 
 @app.post("/chat")
 def chat(payload: ChatRequest):
-    return llama_style_response(payload.message, intelligence_snapshot(), payload.history)
+    snapshot = intelligence_snapshot()
+    if payload.live_context:
+        snapshot["client_live_context"] = payload.live_context
+    return llama_style_response(payload.message, snapshot, payload.history)
 
 
 @app.post("/ocr/upload")
@@ -219,6 +243,7 @@ class TransactionConfirmRequest(BaseModel):
     tax: float = 0.0
     service_charge: float = 0.0
     goalAllocation: list = []
+    paymentMethod: str = "GrabPay"
 
 def process_goal_allocation(allocations):
     for alloc in allocations:
@@ -248,14 +273,17 @@ async def ocr_confirm(payload: TransactionConfirmRequest):
             "tax": payload.tax,
             "service_charge": payload.service_charge
         },
-        "goalAllocation": payload.goalAllocation
+        "goalAllocation": payload.goalAllocation,
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "paymentMethod": payload.paymentMethod or payload.source,
     }
     
     new_tx["source"] = payload.source
     TRANSACTIONS.insert(0, new_tx)
     process_goal_allocation(payload.goalAllocation)
-        
-    return {"status": "success", "transaction": new_tx}
+    snapshot = intelligence_snapshot()
+    analysis = receipt_ai_analysis(new_tx, TRANSACTIONS, snapshot["balance"])
+    return {"status": "success", "transaction": new_tx, "analysis": analysis, "snapshot": snapshot}
 
 class ManualTransactionRequest(BaseModel):
     merchant: str
@@ -264,6 +292,7 @@ class ManualTransactionRequest(BaseModel):
     category: str = "Other"
     source: str = "GrabPay"
     goalAllocation: list = []
+    paymentMethod: str = "GrabPay"
 
 @app.post("/transactions")
 def add_transaction(payload: ManualTransactionRequest):
@@ -275,11 +304,38 @@ def add_transaction(payload: ManualTransactionRequest):
         "type": payload.type,
         "category": payload.category,
         "source": payload.source,
-        "goalAllocation": payload.goalAllocation
+        "goalAllocation": payload.goalAllocation,
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "paymentMethod": payload.paymentMethod or payload.source,
     }
     TRANSACTIONS.insert(0, new_tx)
     process_goal_allocation(payload.goalAllocation)
-    return {"status": "success", "transaction": new_tx}
+    return {"status": "success", "transaction": new_tx, "snapshot": intelligence_snapshot()}
+
+
+class RecommendationAcceptRequest(BaseModel):
+    merchant: str
+    amount: float = None
+    category: str = "Food"
+    paymentMethod: str = "GrabPay"
+
+
+@app.post("/recommendations/accept")
+def accept_recommendation(payload: RecommendationAcceptRequest):
+    amount = abs(payload.amount if payload.amount is not None else 20)
+    new_tx = {
+        "id": f"rec_{uuid.uuid4().hex[:6]}",
+        "date": str(date.today()),
+        "merchant": payload.merchant,
+        "amount": -amount,
+        "type": "expense",
+        "category": payload.category,
+        "source": "AI Recommendation",
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "paymentMethod": payload.paymentMethod,
+    }
+    TRANSACTIONS.insert(0, new_tx)
+    return {"status": "success", "transaction": new_tx, "snapshot": intelligence_snapshot()}
 
 @app.get("/transactions")
 def get_transactions():
@@ -288,7 +344,6 @@ def get_transactions():
 
 @app.delete("/transactions/{tx_id}")
 def delete_transaction(tx_id: str):
-    global TRANSACTIONS
     tx_to_delete = next((tx for tx in TRANSACTIONS if tx["id"] == tx_id), None)
     if not tx_to_delete:
         return {"status": "error", "message": "Transaction not found"}, 404
@@ -304,7 +359,7 @@ def delete_transaction(tx_id: str):
                         goal["current_amount"] = max(0, goal["current_amount"] - amount)
                         break
 
-    TRANSACTIONS = [tx for tx in TRANSACTIONS if tx["id"] != tx_id]
+    TRANSACTIONS[:] = [tx for tx in TRANSACTIONS if tx["id"] != tx_id]
     return {"status": "success"}
 
 class TransactionPatchRequest(BaseModel):
@@ -452,5 +507,3 @@ def delete_investment(inv_id: str):
     if len(INVESTMENTS) < original_len:
         return {"status": "success"}
     return {"status": "error", "message": "Investment not found"}, 404
-
-

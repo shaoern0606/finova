@@ -72,6 +72,7 @@ export default function SmartMap({
   categoryFilter,
   setCategoryFilter,
   onRefreshMerchants,
+  onAcceptRecommendation,
 }) {
   const [selectedMerchant, setSelectedMerchant] = useState(null);
   const [showDebug, setShowDebug] = useState(false);
@@ -144,7 +145,7 @@ export default function SmartMap({
         <button
           onClick={handleRefresh}
           title="Refresh nearby merchants"
-          className="w-9 h-9 bg-white rounded-full shadow-md flex items-center justify-center text-gx-600 hover:bg-emerald-50 transition"
+          className="w-9 h-9 bg-white rounded-full shadow-md flex items-center justify-center text-gx-600 hover:bg-violet-50 transition"
         >
           <RefreshCw size={15} className={isRefreshing ? "animate-spin" : ""} />
         </button>
@@ -189,7 +190,7 @@ export default function SmartMap({
             <Circle
               center={[location.lat, location.lng]}
               radius={3000}
-              pathOptions={{ color: "#10b981", fillColor: "#10b981", fillOpacity: 0.04, weight: 1.5, dashArray: "6 4" }}
+              pathOptions={{ color: "#7c3aed", fillColor: "#7c3aed", fillOpacity: 0.04, weight: 1.5, dashArray: "6 4" }}
             />
           </>
         )}
@@ -248,8 +249,8 @@ export default function SmartMap({
             <MapPin size={12} /> {selectedMerchant.distance_km}km away
           </div>
 
-          <div className="bg-emerald-50 text-emerald-900 border border-emerald-100 rounded-lg p-3 mb-3">
-            <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600 mb-0.5">Estimated Savings</p>
+          <div className="bg-violet-50 text-gx-900 border border-violet-100 rounded-lg p-3 mb-3">
+            <p className="text-[10px] font-black uppercase tracking-wider text-gx-600 mb-0.5">Estimated Savings</p>
             <p className="text-xl font-black">
               {selectedMerchant.estimated_savings > 0 ? "+" : ""}RM{selectedMerchant.estimated_savings}
             </p>
@@ -259,6 +260,15 @@ export default function SmartMap({
             <Info size={14} className="mt-0.5 flex-shrink-0 text-gx-500" />
             <p className="text-xs font-medium leading-snug">{selectedMerchant.reason}</p>
           </div>
+
+          {onAcceptRecommendation && (
+            <button
+              onClick={() => onAcceptRecommendation(selectedMerchant)}
+              className="mt-4 w-full rounded-xl bg-gx-500 px-4 py-2.5 text-xs font-black text-white shadow-md active:scale-[0.98]"
+            >
+              Accept Recommendation
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -5,15 +5,17 @@ export default {
     extend: {
       colors: {
         gx: {
-          50: "#ecfdf3",
-          100: "#d1fae1",
-          500: "#00a86b",
-          600: "#008a59",
-          900: "#053b2c"
+          50: "#f5f3ff",
+          100: "#ede9fe",
+          400: "#a78bfa",
+          500: "#7c3aed",
+          600: "#6d28d9",
+          700: "#5b21b6",
+          900: "#24103f"
         }
       },
       boxShadow: {
-        soft: "0 16px 45px rgba(5, 59, 44, 0.10)"
+        soft: "0 18px 55px rgba(76, 29, 149, 0.14)"
       }
     }
   },

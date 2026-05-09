@@ -86,7 +86,7 @@ export default function Investments({ data, onUpdate }) {
   }
 
   return (
-    <main className="space-y-6 px-6 pt-10 pb-6 overflow-x-hidden">
+    <main className="space-y-6 px-6 pt-14 pb-6 overflow-x-hidden">
       {/* Header */}
       <section>
         <div className="flex items-center gap-2 mb-1">
@@ -99,16 +99,16 @@ export default function Investments({ data, onUpdate }) {
 
       {/* Net Worth Dashboard Section */}
       <section className="bg-gx-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-gx-900/20">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-3xl" />
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gx-500/20 blur-3xl" />
         <div className="relative z-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-2">Total Net Worth</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gx-400 mb-2">Total Net Worth</p>
           <h2 className="text-4xl font-black tracking-tight">{money(balances.net_worth)}</h2>
 
           <div className="mt-8 grid grid-cols-1 gap-3">
             <div className="flex justify-between items-center bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <Landmark size={18} className="text-blue-400" />
+                <div className="p-2 bg-gx-500/20 rounded-lg">
+                  <Landmark size={18} className="text-gx-400" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-white/50 uppercase">Savings Goals</p>
@@ -251,8 +251,8 @@ export default function Investments({ data, onUpdate }) {
 
       {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-white rounded-[2rem] p-6 animate-in slide-in-from-bottom duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-[90%] max-w-sm bg-white rounded-[2rem] p-6 animate-in slide-in-from-bottom duration-300">
             <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
               <Briefcase className="text-gx-600" />
               {editingInv ? "Edit Investment" : "Add Investment"}

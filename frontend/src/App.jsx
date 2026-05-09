@@ -2,10 +2,12 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { api, post } from "./api.js";
 import FloatingChat from "./components/FloatingChat.jsx";
 import Nav from "./components/Nav.jsx";
+import AuthPage from "./pages/AuthPage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Simulation from "./pages/Simulation.jsx";
 import ReceiptScanner from "./pages/ReceiptScanner.jsx";
 import Investments from "./pages/Investments.jsx";
+import StatusBar from "./components/StatusBar.jsx";
 
 const money = (value) => {
   const n = Number(value || 0);
@@ -15,6 +17,13 @@ const money = (value) => {
 };
 
 export default function App() {
+  const [session, setSession] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("finmate_session") || "null");
+    } catch {
+      return null;
+    }
+  });
   const [page, setPage] = useState("dashboard");
   const [data, setData] = useState(null);
   const [demoResult, setDemoResult] = useState("");
@@ -89,6 +98,7 @@ export default function App() {
   }
 
   useEffect(() => {
+    if (!session) return;
     loadDashboard().catch(() =>
       setDemoResult("Backend is not reachable yet. Start FastAPI on http://localhost:8000.")
     );
@@ -101,7 +111,18 @@ export default function App() {
       clearTimeout(debounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [session]);
+
+  function handleAuth(nextSession) {
+    localStorage.setItem("finmate_session", JSON.stringify(nextSession));
+    setSession(nextSession);
+  }
+
+  function signOut() {
+    localStorage.removeItem("finmate_session");
+    setSession(null);
+    setPage("dashboard");
+  }
 
   async function load() {
     await loadDashboard();
@@ -112,6 +133,7 @@ export default function App() {
 
   async function demoSalary() {
     const result = await post("/automation/salary", {});
+    if (result.snapshot) setData(result.snapshot);
     setDemoResult(
       `${result.message} Needs ${money(result.needs)}, wants ${money(result.wants)}, savings ${money(result.savings)}.`
     );
@@ -123,12 +145,17 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex justify-center items-start md:items-center p-0 md:p-4">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#4c1d95_0%,#1e1033_42%,#090714_100%)] flex justify-center items-start md:items-center p-0 md:p-4">
       {/* Mobile Frame Container */}
-      <div className="w-[500px] h-[1050px] bg-[#f6fbf8] shadow-[0_30px_80px_rgba(0,0,0,0.35)] relative flex flex-col overflow-hidden mx-auto rounded-[45px] border-[12px] border-black">
-
+      {/*<div className="w-[500px] h-[1050px] bg-[#f6fbf8] shadow-[0_30px_80px_rgba(0,0,0,0.35)] relative flex flex-col overflow-hidden mx-auto rounded-[45px] border-[12px] border-black">*/}
+      <div className="w-full max-w-md h-screen md:h-[850px] md:max-h-[calc(100vh-2rem)] bg-[#f7f4ff] shadow-[0_30px_90px_rgba(0,0,0,0.36)] relative flex flex-col overflow-hidden md:rounded-[3rem] md:border-[8px] md:border-white/10">
+        <StatusBar variant={!session ? "dark" : (page === "dashboard" || page === "investments" ? "light" : "dark")} />
+        {!session ? (
+          <AuthPage onAuth={handleAuth} />
+        ) : (
+          <>
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto no-scrollbar relative">
+        <div className="flex-1 overflow-y-auto no-scrollbar relative pb-24">
           {page === "dashboard" && (
             <Dashboard
               data={data}
@@ -140,21 +167,31 @@ export default function App() {
               userLocation={userLocation}
               locationStatus={locationStatus}
               onRefreshMerchants={fetchMerchants}
+              onSignOut={signOut}
             />
           )}
-          {page === "simulation" && <Simulation data={data} />}
+          {page === "simulation" && <Simulation data={data} onDataUpdate={setData} />}
           {page === "investments" && <Investments data={data} onUpdate={load} />}
           {page === "scanner" && (
-            <ReceiptScanner onTransactionSaved={async () => { await load(); setPage("dashboard"); }} />
+            <ReceiptScanner
+              data={data}
+              onTransactionSaved={async (result) => {
+                if (result?.snapshot) setData(result.snapshot);
+                if (result?.analysis?.insights?.length) {
+                  setDemoResult(result.analysis.insights.join(" "));
+                }
+                await loadDashboard();
+                setPage("dashboard");
+              }}
+            />
           )}
-          {/* Spacer so content doesn't hide behind nav */}
-          <div className="h-4" />
         </div>
 
-        {/* Fixed Bottom Navigation — outside scroll, pinned by flex */}
         <Nav active={page} onChange={setPage} />
 
-        <FloatingChat />
+        <FloatingChat data={data} />
+          </>
+        )}
       </div>
     </div>
   );

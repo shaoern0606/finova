@@ -1,5 +1,5 @@
 import { Camera, Check, FileText, Loader2, UploadCloud, X, Plus, Trash2, Aperture, RefreshCw } from "lucide-react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { API_BASE, post, api } from "../api.js";
 
 export default function ReceiptScanner({ onTransactionSaved }) {
@@ -28,6 +28,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
   const [tax, setTax] = useState(0);
   const [serviceCharge, setServiceCharge] = useState(0);
   const [showMetadata, setShowMetadata] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("GrabPay");
 
   const categories = ["Food", "Transport", "Shopping", "Bills", "Other"];
 
@@ -122,6 +123,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
       setTax(data.tax || 0);
       setServiceCharge(data.service_charge || 0);
       setCategory(categories.includes(data.category) ? data.category : "Other");
+      setPaymentMethod(data.payment_method || "GrabPay");
       if (!categories.includes(data.category) && data.category && data.category !== "Other") {
         setCustomCategory(data.category);
       }
@@ -159,11 +161,12 @@ export default function ReceiptScanner({ onTransactionSaved }) {
     setCustomCategory("");
     setItems([]);
     setUseCamera(false);
+    setPaymentMethod("GrabPay");
   };
 
   const handleConfirm = async () => {
-    if (!merchant || !date || items.length === 0) {
-      setError("Merchant, Date, and at least one Item are required.");
+    if (!merchant || !date || !(parseFloat(amount) > 0)) {
+      setError("Merchant, Date, and Amount are required.");
       return;
     }
 
@@ -180,13 +183,14 @@ export default function ReceiptScanner({ onTransactionSaved }) {
         raw_text: rawText,
         tax: tax,
         service_charge: serviceCharge,
-        type: "expense"
+        type: "expense",
+        paymentMethod,
       };
 
-      await post("/ocr/confirm", payload);
+      const result = await post("/ocr/confirm", payload);
 
       if (onTransactionSaved) {
-        onTransactionSaved();
+        await onTransactionSaved(result);
       }
     } catch (err) {
       setError(err.message || "Failed to save transaction");
@@ -226,7 +230,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
 
 
   return (
-    <div className="space-y-4 px-6 pt-10 pb-6">
+    <div className="space-y-4 px-6 pt-14 pb-6">
       <div className="mb-4">
         <h1 className="text-2xl font-black text-gx-900 leading-tight">Scan Receipt</h1>
         <p className="text-xs text-slate-500">Auto-extract transaction details</p>
@@ -236,7 +240,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
         {/* Top Section: Upload / Image Section */}
         <div className="flex flex-col gap-4">
           <div
-            className={`relative flex min-h-[350px] md:min-h-[500px] flex-col items-center justify-center overflow-hidden rounded-2xl border-2 transition-colors ${preview || useCamera ? "border-transparent bg-black" : "border-dashed border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50"
+            className={`relative flex min-h-[350px] md:min-h-[500px] flex-col items-center justify-center overflow-hidden rounded-2xl border-2 transition-colors ${preview || useCamera ? "border-transparent bg-black" : "border-dashed border-violet-200 bg-violet-50/50 hover:bg-violet-50"
               }`}
           >
             {preview ? (
@@ -288,7 +292,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
               </>
             ) : (
               <div className="text-center p-6">
-                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-gx-600 shadow-sm">
+                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-violet-100 text-gx-600 shadow-sm">
                   <Camera size={36} />
                 </div>
                 <h3 className="mb-2 text-lg font-bold text-gx-900">Add a Receipt</h3>
@@ -297,7 +301,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <button
                     onClick={() => setUseCamera(true)}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-gx-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-emerald-500/30 transition hover:bg-gx-600"
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gx-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-gx-500/30 transition hover:bg-gx-600"
                   >
                     <Camera size={20} />
                     <span>Open Camera</span>
@@ -323,7 +327,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
           </div>
 
           {loading && (
-            <div className="flex items-center justify-center gap-3 rounded-xl bg-blue-50 p-4 text-blue-700 animate-pulse">
+            <div className="flex items-center justify-center gap-3 rounded-xl bg-violet-50 p-4 text-gx-600 animate-pulse">
               <Loader2 className="h-5 w-5 animate-spin" />
               <span className="font-medium">AI is extracting details...</span>
             </div>
@@ -417,12 +421,28 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                   </div>
                 )}
 
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-slate-700">Payment Method</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    disabled={loading}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 font-medium text-gx-900 focus:border-gx-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gx-500/20 transition-all"
+                  >
+                    <option value="GrabPay">GrabPay</option>
+                    <option value="GXBank">GXBank</option>
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="Cash">Cash</option>
+                    <option value="E-wallet">E-wallet</option>
+                  </select>
+                </div>
+
                 <div className="pt-4 border-t border-slate-100">
                   <div className="flex items-center justify-between mb-3">
                     <label className="block text-sm font-semibold text-slate-700">Purchased Items</label>
                     <button
                       onClick={addItem}
-                      className="flex items-center gap-1 text-xs font-bold text-gx-600 hover:text-gx-700 bg-emerald-50 px-3 py-1.5 rounded-lg"
+                      className="flex items-center gap-1 text-xs font-bold text-gx-600 hover:text-gx-700 bg-violet-50 px-3 py-1.5 rounded-lg"
                     >
                       <Plus size={14} /> Add Item
                     </button>
@@ -505,7 +525,7 @@ export default function ReceiptScanner({ onTransactionSaved }) {
                 <button
                   onClick={handleConfirm}
                   disabled={loading}
-                  className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-gx-500 py-4 font-bold text-white shadow-lg shadow-emerald-500/30 transition hover:bg-gx-600 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
+                  className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-gx-500 py-4 font-bold text-white shadow-lg shadow-gx-500/30 transition hover:bg-gx-600 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
                 >
                   {loading ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
                   <span>Confirm & Save</span>

@@ -16,72 +16,64 @@ def llama_style_response(message, context, history=None):
     goals = context["goals"]
     user = context["user"]
     history = history or []
+    latest_transactions = summary.get("transactions", [])[:6]
+    spending_trends = summary.get("spending_intelligence", {}).get("trends", [])
+    receipt_context = [
+        tx for tx in latest_transactions
+        if tx.get("receipt_url") or tx.get("source") in ("Receipt Scanner", "GrabPay")
+    ][:3]
 
     # Format history for prompt
     history_str = "\n".join([f"{h['role'].upper()}: {h['text']}" for h in history[-6:]])
 
     prompt = f"""
-
 You are Nova, a professional financial advisor AI for FINMATE OS.
 
 Your role:
-
 - Give clear, statistical financial advice using percentages, ratios, and projections.
 - Use the provided context to calculate the mathematical impact of decisions.
 - Be extremely concise. Get straight to the numbers and facts.
 
 CONTEXT:
-
-- Net Worth: {balance}
-
+- Current Balance and Net Worth: {balance}
 - Behavior: {context.get("behavior", {}).get("classification")}
-
 - Goals: {goals}
-
 - Loans: {context.get("loans", [])}
-
 - Daily Spending: {summary["daily_average"]} RM/day
-
+- AI Behaviour Coach Insights: {context.get("coach", {}).get("observations")}
+- Monthly AI Summary: {context.get("coach", {}).get("monthly_summary")}
+- Recommendations: {context.get("coach", {}).get("recommendations")}
+- Travel Mode: {context.get("coach", {}).get("travel")}
+- Latest Transactions: {latest_transactions}
+- Spending Trends: {spending_trends}
+- Recent Receipt Context: {receipt_context}
+- Category Breakdown: {summary.get("category_breakdown", {})}
 - Peer Benchmark: {context.get("peer", [])}
+- Client Live Context: {context.get("client_live_context", {})}
 
 RECENT CONVERSATION:
-
 {history_str}
 
 USER QUERY:
-
 "{message}"
 
 INSTRUCTIONS:
-
 - Always explain your reasoning using statistics (e.g., impact on daily average, savings percentage, or debt ratio).
-
 - Keep the response extremely concise and strictly data-focused. 
-
 - If the user suggests risky spending, warn clearly with mathematical projections.
-
+- Reference live app data when useful: latest merchant, current balance, category trend, receipt insights, or goal progress.
 - If unsure, make a reasonable assumption (do NOT mention "simulated research").
-
 - DO NOT include markdown or explanation outside JSON
 
 Respond ONLY in valid JSON:
-
 {{
-
   "category": "advice | warning | forecast | loan | general",
-
   "response": "Clear and professional financial advice",
-
   "insights": [
-
     "Key financial insight 1",
-
     "Key financial insight 2"
-
   ]
-
 }}
-
 """
 
     try:
@@ -93,54 +85,22 @@ Respond ONLY in valid JSON:
         result = json.loads(text_response)
         return result
     except Exception as e:
-        print(f"Gemini Error: {e}")
-        # Fallback to original logic if API fails
-        text = message.lower()
-        if "rm10" in text or "10 daily" in text or "save" in text:
-            result = savings_forecast(10, 10)
-            return {
-                "category": "forecast",
-                "response": f"Based on your savings goals, {result['message'].lower()} With a modest 3% growth, that could reach RM{result['projected_value']:,.0f} over a decade.",
-                "insights": ["Goal-based trajectory", "3% growth simulation", "Daily RM10 habit"],
-            }
-        if "loan" in text:
-            result = evaluate_loan(12000, 5.5, 36, goals, user)
-            return {
-                "category": "loan",
-                "response": f"I'd advise caution here. A RM{result['monthly_payment']:,.0f} monthly payment is significant. {result['message']}",
-                "insights": ["Debt-to-income impact", "Goal delay calculation", "Interest rate node"],
-            }
-        if "afford" in text or "buy" in text or "purchase" in text or "car" in text or "phone" in text or "laptop" in text:
-            # Architect-style fallback reasoning
-            amount = 500
-            item = "this purchase"
-            thought = "Checking balance against asset nodes... Identifying conflicts with savings goals..."
-            
-            if "car" in text:
-                amount = 80000
-                item = "a car"
-                response = f"Before we look at RM{amount:,} for a car, I have to ask: Is this a necessity or a lifestyle upgrade? Your current net worth is {money(balance['net_worth'])}. Adding a car loan would significantly increase your 'Debt' edge and likely push your 'Emergency Fund' goal back by several years. Have you considered the insurance and maintenance nodes in this graph?"
-                thought = "User queried big-ticket item (Car). High debt-to-income risk detected. Net worth insufficient for cash purchase. Loan impact: High."
-            elif "tea" in text or "coffee" in text:
-                amount = 15 * (int(''.join(filter(str.isdigit, text))) if any(char.isdigit() for char in text) else 1)
-                response = f"While RM{amount} for tea won't break the bank, your 'Impulsive' spending category is already at {context.get('behavior', {}).get('shopping_ratio', 0)*100:.0f}%. If we keep adding these small edges, your 'Japan Travel' goal will suffer. Is there a cheaper alternative you'd consider today?"
-                thought = "Micro-spending detected. Accumulation risk check. Checking goal node: Japan Travel."
-            else:
-                response = f"I see you're thinking about a RM{amount} purchase. Looking at your current daily spend velocity of {money(summary['daily_average'])}, this is affordable, but it reduces your 'Days until low balance' from {context.get('prediction', {}).get('days_until_low_balance', 0)} down by a few days. Does this purchase align with your City-Living priorities?"
-                thought = "Standard affordability check. Velocity check. Buffer impact: Minimal."
-
-            return {
-                "category": "architect_fallback",
-                "thought_process": thought,
-                "response": response,
-                "insights": ["Cash buffer check", "Goal collision check"],
-            }
+        error_msg = str(e)
+        print(f"Gemini Error: {error_msg}")
         
+        # Determine user-friendly error message based on common API errors
+        if "API_KEY_HTTP_REFERRER_BLOCKED" in error_msg:
+            friendly_error = "I'm having trouble connecting to my brain. Your API key has an 'HTTP Referrer' restriction. Please remove this restriction in the Google Cloud Console or AI Studio to enable my full intelligence."
+        elif "quota" in error_msg.lower():
+            friendly_error = "I've been thinking too much! I've reached my API quota limit for now. Please try again in a few minutes."
+        else:
+            friendly_error = "I'm experiencing a momentary lapse in my neural network. Please try asking again in a moment."
+
         return {
-            "category": "coach",
-            "thought_process": "General inquiry handling. Providing overview of navigation capabilities.",
-            "response": "I'm Nova, your Financial Architect. I don't just calculate numbers; I evaluate the relationships between your goals, loans, and spending habits. Ask me about a potential purchase or your progress towards your Japan trip.",
-            "insights": [],
+            "category": "error",
+            "thought_process": f"API Error: {error_msg}",
+            "response": friendly_error,
+            "insights": ["API connectivity issue detected"],
         }
 
 

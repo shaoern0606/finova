@@ -24,8 +24,10 @@ def evaluate_purchase(amount, summary, balance):
         warning = "Critical: this purchase pushes your buffer below RM1,000."
     elif days_after_purchase < 30:
         warning = "Caution: this purchase leaves less than 30 days before a low-balance event."
+    elif days_after_purchase < 60:
+        warning = "Purchase looks affordable, but watch for any unexpected bills."
     else:
-        warning = "Purchase looks affordable if no unusual bills arrive."
+        warning = "Purchase looks affordable based on your current balance."
     return {
         "purchase_amount": amount,
         "future_balance": round(future_balance, 2),

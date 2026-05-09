@@ -21,7 +21,7 @@ def credit_score(summary, behavior, balance, loans, user):
     emergency_fund_health = min(100, (months_buffer / 6) * 100) # 6 months = 100 score
     
     # 5. Goal Progress Rate (10%)
-    goals_saved = summary["category_breakdown"].get("Goals", 0)
+    goals_saved = summary["category_breakdown"].get("Financial Services", 0) + summary["category_breakdown"].get("Goals", 0)
     goal_progress_rate = min(100, (goals_saved / (income * 0.2)) * 100) # saving 20% of income = 100
     
     # Calculate weighted total

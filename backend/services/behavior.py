@@ -2,8 +2,8 @@ def classify_behavior(summary, user):
     income = user["monthly_income"]
     spending = summary["total_spending"]
     shopping = summary["category_breakdown"].get("Shopping", 0)
-    food = summary["category_breakdown"].get("Food", 0)
-    savings_like = summary["category_breakdown"].get("Goals", 0)
+    food = summary["category_breakdown"].get("Food & Beverage", 0) + summary["category_breakdown"].get("Food", 0)
+    savings_like = summary["category_breakdown"].get("Financial Services", 0) + summary["category_breakdown"].get("Goals", 0)
 
     spend_ratio = spending / income
     shopping_ratio = shopping / max(spending, 1)

@@ -5,7 +5,7 @@ export default function ScoreRing({ data }) {
   const [showDetail, setShowDetail] = useState(false);
   if (!data) return null;
   const score = data.score || 0;
-  const color = score >= 75 ? "#00a86b" : score >= 55 ? "#d59b00" : "#dc2626";
+  const color = score >= 75 ? "#7c3aed" : score >= 55 ? "#d59b00" : "#dc2626";
   
   return (
     <div className="flex flex-col items-center">
@@ -13,7 +13,7 @@ export default function ScoreRing({ data }) {
       <div className="flex items-center gap-4 w-full">
         <div
           className="grid h-20 w-20 shrink-0 place-items-center rounded-full"
-          style={{ background: `conic-gradient(${color} ${score * 3.6}deg, #e8f5ee 0deg)` }}
+          style={{ background: `conic-gradient(${color} ${score * 3.6}deg, #ede9fe 0deg)` }}
         >
           <div className="grid h-14 w-14 place-items-center rounded-full bg-white text-lg font-black text-gx-900 shadow-inner">
             {score}
@@ -24,7 +24,7 @@ export default function ScoreRing({ data }) {
           <p className="text-[10px] text-slate-500 mt-0.5">Tap to see breakdown</p>
           <button 
             onClick={() => setShowDetail(!showDetail)}
-            className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-gx-600 bg-emerald-50 px-2.5 py-1 rounded-full active:bg-emerald-100 transition"
+            className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-gx-600 bg-violet-50 px-2.5 py-1 rounded-full active:bg-violet-100 transition"
           >
             <Info size={11} />
             {showDetail ? "Hide Details" : "View Details"}
@@ -58,7 +58,7 @@ export default function ScoreRing({ data }) {
           </div>
 
           <div className="grid gap-1.5 text-[10px] pt-2 border-t border-slate-200">
-            <div className="bg-emerald-50 text-emerald-900 p-2 rounded-lg">
+            <div className="bg-violet-50 text-gx-900 p-2 rounded-lg">
               <span className="font-bold block text-[9px]">Positive Factors</span>
               {data.top_factors?.join(", ")}
             </div>
