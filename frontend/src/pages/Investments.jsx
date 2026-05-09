@@ -3,21 +3,30 @@ import { post, api } from "../api.js";
 import {
   TrendingUp, TrendingDown, Plus, Edit2, Trash2,
   Wallet, PieChart, ArrowUpRight, ArrowDownRight,
-  Info, DollarSign, Landmark, Briefcase
+  Info, DollarSign, Landmark, Briefcase, Goal, Target, CheckCircle2
 } from "lucide-react";
 
 const money = (v) => `RM${Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export default function Investments({ data, onUpdate }) {
+export default function Investments({ data, onUpdate, onDataUpdate }) {
   const [investments, setInvestments] = useState(data?.investments || []);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingInv, setEditingInv] = useState(null);
 
-  // Form State
   const [name, setName] = useState("");
   const [amountInvested, setAmountInvested] = useState("");
   const [currentValue, setCurrentValue] = useState("");
+
+  // Goal State
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [editGoalName, setEditGoalName] = useState("");
+  const [editGoalTarget, setEditGoalTarget] = useState("");
+  const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [addGoalName, setAddGoalName] = useState("");
+  const [addGoalTarget, setAddGoalTarget] = useState("");
+  const [addGoalDate, setAddGoalDate] = useState("");
+  const [addGoalCategory, setAddGoalCategory] = useState("General");
 
   const balances = data?.balance || { cash: 0, investments: 0, net_worth: 0, debt: 0 };
 
@@ -84,6 +93,61 @@ export default function Investments({ data, onUpdate }) {
     setAmountInvested("");
     setCurrentValue("");
   }
+
+  // Goal Handlers
+  const handleUpdateGoal = async () => {
+    if (!editingGoal) return;
+    const goalId = editingGoal.id;
+    const newName = editGoalName;
+    const newTarget = parseFloat(editGoalTarget);
+    if (onDataUpdate) {
+      onDataUpdate(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          goals: (prev.goals || []).map(g => g.id === goalId ? { ...g, name: newName, target_amount: newTarget } : g)
+        };
+      });
+    }
+    setEditingGoal(null);
+    try {
+      await api(`/goals/${goalId}`, { method: "PATCH", body: JSON.stringify({ name: newName, target_amount: newTarget }) });
+    } catch (e) { console.error(e); }
+    if (onUpdate) onUpdate();
+  };
+
+  const handleCreateGoal = async () => {
+    if (!addGoalName || !addGoalTarget) return;
+    const name = addGoalName;
+    const target = parseFloat(addGoalTarget);
+    const deadline = addGoalDate;
+    const category = addGoalCategory;
+    const tempId = `goal_tmp_${Date.now()}`;
+    const newGoal = { id: tempId, name, target_amount: target, current_amount: 0, monthly_contribution: 0, target_date: deadline || "", category: category || "General" };
+    if (onDataUpdate) {
+      onDataUpdate(prev => ({ ...prev, goals: [...(prev.goals || []), newGoal] }));
+    }
+    setIsAddingGoal(false);
+    setAddGoalName(""); setAddGoalTarget(""); setAddGoalDate(""); setAddGoalCategory("General");
+    try {
+      const result = await post("/goals", { name, target_amount: target, target_date: deadline, category });
+      if (onDataUpdate) {
+        onDataUpdate(prev => ({ ...prev, goals: (prev.goals || []).map(g => g.id === tempId ? { ...g, id: result.goal?.id ?? tempId } : g) }));
+      }
+    } catch (e) { console.error(e); }
+    if (onUpdate) onUpdate();
+  };
+
+  const handleDeleteGoal = async () => {
+    if (!editingGoal) return;
+    const goalId = editingGoal.id;
+    if (confirm("Are you sure?")) {
+      if (onDataUpdate) onDataUpdate(prev => ({ ...prev, goals: (prev.goals || []).filter(g => g.id !== goalId) }));
+      setEditingGoal(null);
+      try { await api(`/goals/${goalId}`, { method: "DELETE" }); } catch (e) { console.error(e); }
+      if (onUpdate) onUpdate();
+    }
+  };
 
   return (
     <main className="space-y-6 px-6 pt-14 pb-6 overflow-x-hidden">
@@ -157,6 +221,87 @@ export default function Investments({ data, onUpdate }) {
               <p className="text-[10px] font-bold text-red-300">Liability</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Savings Goals Section */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Savings Goals</h3>
+          <button
+            onClick={() => setIsAddingGoal(true)}
+            className="p-1.5 rounded-lg text-gx-600 hover:bg-violet-50 transition active:scale-90"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+        <div className="grid grid-cols-1 gap-3">
+          {data?.goals?.length === 0 ? (
+            <div className="p-5 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
+              <p className="text-xs text-slate-400">No active goals</p>
+            </div>
+          ) : (
+            data.goals.map(goal => (
+              <div
+                key={goal.id}
+                className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm cursor-pointer active:bg-slate-50 transition group"
+                onClick={() => { setEditingGoal(goal); setEditGoalName(goal.name); setEditGoalTarget(goal.target_amount); }}
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <div className="flex items-center gap-2">
+                    <Target size={16} className="text-gx-600" />
+                    <span className="text-sm font-black text-slate-900">{goal.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[8px] font-bold text-slate-300 opacity-0 group-hover:opacity-100 transition">EDIT</span>
+                    <span className="text-[10px] font-black text-gx-600 bg-violet-50 px-2 py-0.5 rounded-full">
+                      {Math.round((goal.current_amount / goal.target_amount) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
+                  <div className="h-full bg-gx-500 rounded-full" style={{ width: `${Math.min((goal.current_amount / goal.target_amount) * 100, 100)}%` }} />
+                </div>
+                <div className="mt-2 flex justify-between text-[10px] font-bold text-slate-400 uppercase">
+                  <span>Saved {money(goal.current_amount)}</span>
+                  <span>Target {money(goal.target_amount)}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
+      {/* Liabilities & Debt Section */}
+      <section className="space-y-3">
+        <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Total Liabilities</h3>
+        <div className="space-y-2">
+          {data?.loans?.length === 0 ? (
+            <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
+              <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-emerald-600 shadow-sm">
+                <CheckCircle2 size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-black text-emerald-900">Debt Free</p>
+                <p className="text-[10px] font-medium text-emerald-700">No outstanding liabilities detected.</p>
+              </div>
+            </div>
+          ) : (
+            data.loans.map(loan => (
+              <div key={loan.id} className="flex items-center justify-between bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-red-50 text-red-600 rounded-xl">
+                    <Landmark size={18} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-slate-900">{loan.name}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">{loan.remaining_months} months remaining</p>
+                  </div>
+                </div>
+                <p className="text-sm font-black text-red-600">{money(loan.outstanding)}</p>
+              </div>
+            ))
+          )}
         </div>
       </section>
 
@@ -252,7 +397,7 @@ export default function Investments({ data, onUpdate }) {
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-[90%] max-w-sm bg-white rounded-[2rem] p-6 animate-in slide-in-from-bottom duration-300">
+          <div className="w-[90%] max-w-sm bg-white rounded-2xl p-6 animate-in slide-in-from-bottom duration-300">
             <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
               <Briefcase className="text-gx-600" />
               {editingInv ? "Edit Investment" : "Add Investment"}
@@ -307,6 +452,34 @@ export default function Investments({ data, onUpdate }) {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingGoal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-gx-900 mb-4">Edit Goal</h3>
+            <div className="space-y-4">
+              <div><label className="text-xs font-semibold text-slate-500">Goal Name</label><input type="text" value={editGoalName} onChange={e => setEditGoalName(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none" /></div>
+              <div><label className="text-xs font-semibold text-slate-500">Target Amount (RM)</label><input type="number" value={editGoalTarget} onChange={e => setEditGoalTarget(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none" /></div>
+              <div className="mt-6 flex flex-col gap-2"><button onClick={() => setEditingGoal(null)} className="flex-[2] rounded-lg bg-slate-100 py-3 font-bold text-slate-600">Cancel</button><button onClick={handleDeleteGoal} className="flex-1 rounded-lg bg-red-50 py-3 font-bold text-red-600">Delete</button><button onClick={handleUpdateGoal} className="flex-[2] rounded-lg bg-gx-500 py-3 font-bold text-white shadow-md shadow-gx-500/20">Save</button></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAddingGoal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 animate-in fade-in">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-gx-900 mb-4">Create New Goal</h3>
+            <div className="space-y-4">
+              <div><label className="text-xs font-semibold text-slate-500">Goal Name</label><input type="text" value={addGoalName} onChange={e => setAddGoalName(e.target.value)} placeholder="e.g., Vacation Fund" className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none" /></div>
+              <div><label className="text-xs font-semibold text-slate-500">Target Amount (RM)</label><input type="number" value={addGoalTarget} onChange={e => setAddGoalTarget(e.target.value)} placeholder="0.00" className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none" /></div>
+              <div><label className="text-xs font-semibold text-slate-500">Optional Deadline (Date)</label><input type="date" value={addGoalDate} onChange={e => setAddGoalDate(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none" /></div>
+              <div><label className="text-xs font-semibold text-slate-500">Category</label><select value={addGoalCategory} onChange={e => setAddGoalCategory(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none bg-white"><option value="General">General</option><option value="Travel">Travel</option><option value="Emergency">Emergency</option><option value="Education">Education</option><option value="Property">Property</option><option value="Other">Other</option></select></div>
+              <div className="mt-6 flex gap-2"><button onClick={() => setIsAddingGoal(false)} className="flex-1 rounded-lg bg-slate-100 py-3 font-bold text-slate-600">Cancel</button><button onClick={handleCreateGoal} className="flex-1 rounded-lg bg-gx-500 py-3 font-bold text-white shadow-md shadow-gx-500/20">Create Goal</button></div>
             </div>
           </div>
         </div>

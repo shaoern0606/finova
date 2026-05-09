@@ -63,9 +63,6 @@ def analyze_behaviour_coach(transactions, user, balance):
     if len(food_delivery) >= 3:
         observations.append(f"Food delivery is becoming a frequent habit ({len(food_delivery)} orders this month).")
     
-    if overseas_tx:
-        observations.append(f"Travel mode active: You've spent RM{travel_total_myr:.2f} across {len(overseas_tx)} overseas transactions.")
-
     # 5. Monthly Summary
     top_category = "None"
     cat_totals = defaultdict(float)

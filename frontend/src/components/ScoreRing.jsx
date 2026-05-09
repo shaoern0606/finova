@@ -6,7 +6,7 @@ export default function ScoreRing({ data }) {
   if (!data) return null;
   const score = data.score || 0;
   const color = score >= 75 ? "#7c3aed" : score >= 55 ? "#d59b00" : "#dc2626";
-  
+
   return (
     <div className="flex flex-col items-center">
       {/* Ring + Label */}
@@ -20,9 +20,9 @@ export default function ScoreRing({ data }) {
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-gx-700">FinScope Score</p>
+          <p className="text-sm font-bold text-gx-700">Financial Health Score</p>
           <p className="text-[10px] text-slate-500 mt-0.5">Tap to see breakdown</p>
-          <button 
+          <button
             onClick={() => setShowDetail(!showDetail)}
             className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-gx-600 bg-violet-50 px-2.5 py-1 rounded-full active:bg-violet-100 transition"
           >

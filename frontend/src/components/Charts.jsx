@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
+  Area, AreaChart,
   Bar, BarChart, CartesianGrid, Cell, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis, Legend,
 } from "recharts";
@@ -198,3 +199,213 @@ export function BehavioralInsights({ insights = [], tagCounts = {} }) {
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SpendingTrendChart — area chart with Day / Week / Month / Year time filters
+// Derives data from raw transactions array (each tx: { date, amount, merchant })
+// ─────────────────────────────────────────────────────────────────────────────
+const RANGE_OPTIONS = [
+  { key: "W", label: "Week", days: 7 },
+  { key: "M", label: "Month", days: 30 },
+  { key: "3M", label: "3 Months", days: 90 },
+  { key: "Y", label: "Year", days: 365 },
+];
+
+function bucketDate(dateStr, days) {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  if (days <= 7) return d.toLocaleDateString("en-MY", { weekday: "short" });
+  if (days <= 30) return d.toLocaleDateString("en-MY", { day: "2-digit", month: "short" });
+  if (days <= 90) return d.toLocaleDateString("en-MY", { day: "2-digit", month: "short" });
+  return d.toLocaleDateString("en-MY", { month: "short", year: "2-digit" });
+}
+
+export function SpendingTrendChart({ transactions = [] }) {
+  const [range, setRange] = useState("M");
+  const cfg = RANGE_OPTIONS.find((o) => o.key === range);
+
+  const chartData = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - cfg.days);
+
+    // 1. filter valid transactions
+    const filtered = transactions.filter((tx) => {
+      const d = new Date(tx.date);
+      return !isNaN(d) && d >= cutoff && tx.amount < 0;
+    });
+
+    // 2. sort by date (IMPORTANT FIX)
+    filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // 3. bucket data
+    const buckets = {};
+
+    for (const tx of filtered) {
+      const key = bucketDate(tx.date, cfg.days);
+      if (!key) continue;
+      buckets[key] = (buckets[key] || 0) + Math.abs(tx.amount);
+    }
+
+    // 4. preserve chronological order (left → right)
+    const labels = filtered.map((tx) => bucketDate(tx.date, cfg.days));
+    const uniqueLabels = [...new Set(labels)];
+
+    return uniqueLabels.map((label) => ({
+      label,
+      amount: buckets[label] || 0,
+    }));
+  }, [transactions, range, cfg.days]);
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div className="rounded-xl bg-gx-900 px-3 py-2 shadow-lg text-white">
+        <p className="text-[10px] font-bold text-violet-300 mb-0.5">{label}</p>
+        <p className="text-sm font-black">RM {payload[0].value.toFixed(2)}</p>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      {/* Time filter chips */}
+      <div className="flex gap-1.5 mb-3">
+        {RANGE_OPTIONS.map((o) => (
+          <button
+            key={o.key}
+            onClick={() => setRange(o.key)}
+            className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${range === o.key
+              ? "bg-gx-600 text-white shadow-sm"
+              : "bg-slate-100 text-slate-500 hover:bg-violet-50 hover:text-gx-600"
+              }`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+
+      {chartData.length === 0 ? (
+        <div className="py-10 text-center text-xs text-slate-400">No spending data for this period.</div>
+      ) : (
+        <ResponsiveContainer width="100%" height={180}>
+          <AreaChart data={chartData} margin={{ left: 0, right: 4, top: 4, bottom: 0 }}>
+            <defs>
+              <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 9, fill: "#94a3b8", fontWeight: 700 }}
+              axisLine={false}
+              tickLine={false}
+              interval="preserveStartEnd"
+            />
+            <YAxis
+              tick={{ fontSize: 9, fill: "#94a3b8" }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => `RM${v}`}
+              width={48}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Area
+              type="monotone"
+              dataKey="amount"
+              stroke="#7c3aed"
+              strokeWidth={2.5}
+              fill="url(#spendGrad)"
+              dot={false}
+              activeDot={{ r: 5, fill: "#7c3aed", strokeWidth: 2, stroke: "#fff" }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TopSpendingWidget — top-5 merchants by total spend from real transactions
+// ─────────────────────────────────────────────────────────────────────────────
+const CAT_EMOJI = {
+  "Food & Beverage": "🍜", "Transport": "🚗", "Shopping": "🛍️",
+  "Living Expenses": "🏠", "Financial Services": "💳", "Health & Wellness": "💊",
+  "Entertainment": "🎬", "Education": "📚", "Travel": "✈️", "Other": "📦",
+};
+
+export function TopSpendingWidget({ transactions = [] }) {
+  // Aggregate by merchant
+  const merchants = useMemo(() => {
+    const map = {};
+    for (const tx of transactions) {
+      if (tx.amount >= 0) continue; // expenses only
+      const key = tx.merchant || "Unknown";
+      if (!map[key]) {
+        map[key] = {
+          name: key,
+          total: 0,
+          count: 0,
+          category: tx.main_category || tx.category || "Other",
+        };
+      }
+      map[key].total += Math.abs(tx.amount);
+      map[key].count += 1;
+    }
+    return Object.values(map)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+  }, [transactions]);
+
+  const maxSpend = merchants[0]?.total || 1;
+
+  if (merchants.length === 0) {
+    return <div className="py-6 text-center text-xs text-slate-400">No spending data yet.</div>;
+  }
+
+  return (
+    <div className="space-y-3 mt-1">
+      {merchants.map((m, i) => {
+        const pct = (m.total / maxSpend) * 100;
+        const color = getColor(m.category, i);
+        const emoji = CAT_EMOJI[m.category] || "📦";
+        return (
+          <div key={m.name} className="flex items-center gap-3">
+            {/* Rank badge */}
+            <div
+              className="h-8 w-8 shrink-0 rounded-xl flex items-center justify-center text-sm font-black text-white shadow-sm"
+              style={{ background: color }}
+            >
+              {emoji}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs font-bold text-slate-800 truncate">{m.name}</p>
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  <span className="text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                    ×{m.count}
+                  </span>
+                  <span className="text-xs font-black text-slate-900">
+                    RM{m.total.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+              {/* Mini progress bar */}
+              <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${pct}%`, background: color }}
+                />
+              </div>
+              <p className="text-[9px] text-slate-400 mt-0.5 font-semibold">{m.category}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+

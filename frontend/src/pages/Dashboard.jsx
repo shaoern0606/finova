@@ -2,7 +2,7 @@ import { AlertTriangle, ArrowDownRight, BadgeCheck, Goal, Landmark, LogOut, MapP
 import { useState } from "react";
 import { post, api } from "../api.js";
 import Card from "../components/Card.jsx";
-import { CategoryBars, SpendingPie, HierarchicalBreakdown, BehavioralInsights } from "../components/Charts.jsx";
+import { CategoryBars, SpendingPie, HierarchicalBreakdown, BehavioralInsights, SpendingTrendChart, TopSpendingWidget } from "../components/Charts.jsx";
 import ScoreRing from "../components/ScoreRing.jsx";
 import SmartMap from "../components/SmartMap.jsx";
 
@@ -22,17 +22,6 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
   const [showNewGoal, setShowNewGoal] = useState(false);
   const [newGoalName, setNewGoalName] = useState("");
   const [newGoalTarget, setNewGoalTarget] = useState("");
-
-  const [editingGoal, setEditingGoal] = useState(null);
-  const [editGoalName, setEditGoalName] = useState("");
-  const [editGoalTarget, setEditGoalTarget] = useState("");
-
-  const [isAddingGoal, setIsAddingGoal] = useState(false);
-  const [addGoalName, setAddGoalName] = useState("");
-  const [addGoalTarget, setAddGoalTarget] = useState("");
-  const [addGoalDate, setAddGoalDate] = useState("");
-  const [addGoalCategory, setAddGoalCategory] = useState("General");
-
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [mapMode, setMapMode] = useState(false);
 
@@ -45,59 +34,6 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
 
   const warnings = data.peer ? data.peer.filter((item) => item.warning).slice(0, 3) : [];
 
-  const handleUpdateGoal = async () => {
-    if (!editingGoal) return;
-    const goalId = editingGoal.id;
-    const newName = editGoalName;
-    const newTarget = parseFloat(editGoalTarget);
-    if (onDataUpdate) {
-      onDataUpdate(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          goals: (prev.goals || []).map(g => g.id === goalId ? { ...g, name: newName, target_amount: newTarget } : g)
-        };
-      });
-    }
-    setEditingGoal(null);
-    try {
-      await api(`/goals/${goalId}`, { method: "PATCH", body: JSON.stringify({ name: newName, target_amount: newTarget }) });
-    } catch (e) { console.error(e); }
-    if (onUpdate) onUpdate();
-  };
-
-  const handleCreateGoal = async () => {
-    if (!addGoalName || !addGoalTarget) return;
-    const name = addGoalName;
-    const target = parseFloat(addGoalTarget);
-    const deadline = addGoalDate;
-    const category = addGoalCategory;
-    const tempId = `goal_tmp_${Date.now()}`;
-    const newGoal = { id: tempId, name, target_amount: target, current_amount: 0, monthly_contribution: 0, target_date: deadline || "", category: category || "General" };
-    if (onDataUpdate) {
-      onDataUpdate(prev => ({ ...prev, goals: [...(prev.goals || []), newGoal] }));
-    }
-    setIsAddingGoal(false);
-    setAddGoalName(""); setAddGoalTarget(""); setAddGoalDate(""); setAddGoalCategory("General");
-    try {
-      const result = await post("/goals", { name, target_amount: target, target_date: deadline, category });
-      if (onDataUpdate) {
-        onDataUpdate(prev => ({ ...prev, goals: (prev.goals || []).map(g => g.id === tempId ? { ...g, id: result.goal?.id ?? tempId } : g) }));
-      }
-    } catch (e) { console.error(e); }
-    if (onUpdate) onUpdate();
-  };
-
-  const handleDeleteGoal = async () => {
-    if (!editingGoal) return;
-    const goalId = editingGoal.id;
-    if (confirm("Are you sure?")) {
-      if (onDataUpdate) onDataUpdate(prev => ({ ...prev, goals: (prev.goals || []).filter(g => g.id !== goalId) }));
-      setEditingGoal(null);
-      try { await api(`/goals/${goalId}`, { method: "DELETE" }); } catch (e) { console.error(e); }
-      if (onUpdate) onUpdate();
-    }
-  };
 
   const totalAllocated = goalAllocations.reduce((sum, g) => sum + (parseFloat(g.allocatedAmount) || 0), 0);
   const unallocatedAmount = Math.max(0, (parseFloat(manualAmount) || 0) - totalAllocated);
@@ -108,22 +44,6 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
     if (goal) setGoalAllocations([...goalAllocations, { goalId: goal.id, goalName: goal.name, allocatedAmount: unallocatedAmount > 0 ? unallocatedAmount : 0 }]);
   };
 
-  const handleCreateNewGoal = async () => {
-    if (!newGoalName || !newGoalTarget) return;
-    const name = newGoalName;
-    const target = parseFloat(newGoalTarget);
-    const tempId = `goal_tmp_quick_${Date.now()}`;
-    const newGoal = { id: tempId, name, target_amount: target, current_amount: 0, monthly_contribution: 0, target_date: "", category: "General" };
-    if (onDataUpdate) onDataUpdate(prev => ({ ...prev, goals: [...(prev.goals || []), newGoal] }));
-    setGoalAllocations([...goalAllocations, { goalId: tempId, goalName: name, allocatedAmount: unallocatedAmount > 0 ? unallocatedAmount : 0 }]);
-    setShowNewGoal(false); setNewGoalName(""); setNewGoalTarget("");
-    try {
-      const result = await post("/goals", { name, target_amount: target, target_date: "", category: "General" });
-      if (onDataUpdate) onDataUpdate(prev => ({ ...prev, goals: (prev.goals || []).map(g => g.id === tempId ? { ...g, id: result.goal?.id ?? tempId } : g) }));
-      setGoalAllocations(prev => prev.map(a => a.goalId === tempId ? { ...a, goalId: result.goal?.id ?? tempId } : a));
-    } catch (e) { console.error(e); }
-    if (onUpdate) onUpdate();
-  };
 
   const handleAddTransaction = async () => {
     if (!manualAmount || !manualMerchant) return;
@@ -156,9 +76,28 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
     }
   };
 
+  const handleCreateNewGoal = async () => {
+    if (!newGoalName || !newGoalTarget) return;
+    const name = newGoalName;
+    const target = parseFloat(newGoalTarget);
+    const tempId = `goal_tmp_quick_${Date.now()}`;
+    const newGoal = { id: tempId, name, target_amount: target, current_amount: 0, monthly_contribution: 0, target_date: "", category: "General" };
+    if (onDataUpdate) onDataUpdate(prev => ({ ...prev, goals: [...(prev.goals || []), newGoal] }));
+    setGoalAllocations([...goalAllocations, { goalId: tempId, goalName: name, allocatedAmount: unallocatedAmount > 0 ? unallocatedAmount : 0 }]);
+    setShowNewGoal(false); setNewGoalName(""); setNewGoalTarget("");
+    try {
+      const result = await post("/goals", { name, target_amount: target, target_date: "", category: "General" });
+      if (onDataUpdate) {
+        onDataUpdate(prev => ({ ...prev, goals: (prev.goals || []).map(g => g.id === tempId ? { ...g, id: result.goal?.id ?? tempId } : g) }));
+        setGoalAllocations(prev => prev.map(a => a.goalId === tempId ? { ...a, goalId: result.goal?.id ?? tempId } : a));
+      }
+    } catch (e) { console.error(e); }
+    if (onUpdate) onUpdate();
+  };
+
   return (
     <main className="space-y-4 px-6 pt-14 pb-4 overflow-x-hidden">
-      <section className="rounded-[1.75rem] bg-gx-900 p-5 text-white relative overflow-hidden shadow-[0_22px_50px_rgba(76,29,149,0.28)]">
+      <section className="rounded-2xl bg-gx-900 p-5 text-white relative overflow-hidden shadow-[0_22px_50px_rgba(76,29,149,0.28)]">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(167,139,250,0.28),transparent_55%)]" />
         <div className="relative z-10">
           <div className="flex items-start justify-between gap-3">
@@ -184,13 +123,7 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
         </section>
       ) : (
         <>
-          <section className="grid grid-cols-2 gap-2">
-            <Card title="Balance" value={money(data.balance.assets)} />
-            <Card title="Net Worth" value={money(data.balance.net_worth)} accent={data.balance.net_worth < 0 ? "text-red-600" : "text-gx-900"} />
-            <Card title="Spending" value={money(data.summary.total_spending)} />
-            <Card title="Daily Avg" value={money(data.summary.daily_average)} />
-          </section>
-
+          {/* ── Financial Health Score ────────────────── */}
           <Card>
             <ScoreRing data={data.score} />
             <div className="mt-3 flex flex-wrap gap-2 justify-center">
@@ -199,52 +132,57 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
             </div>
           </Card>
 
-          <Card title="Predictive Alerts">
-            <div className="mt-2 space-y-2">
-              <div className="flex gap-2 rounded-xl bg-red-50 p-3 text-xs text-red-900 border border-red-100">
-                <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <p className="font-bold text-[11px]">Overspending Risk</p>
-                  <p className="text-[10px] mt-0.5">{money(data.prediction.monthly_spend_projection)} projected — {data.prediction.overspending_risk}</p>
-                </div>
+          {/* ── Spending Trend Chart ───────────────────── */}
+          <Card>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="text-sm font-black text-gx-900">Spending Trend</h2>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Expenses over time</p>
               </div>
-              {warnings.map((item) => (
-                <div key={item.category} className="rounded-xl bg-violet-50 p-2.5 text-[10px] text-gx-900 border border-violet-100">
-                  <span className="font-black uppercase tracking-wider text-[8px] text-gx-600 block mb-0.5">{item.category}</span>
-                  <span className="leading-tight">{item.warning} {item.suggestion}</span>
-                </div>
-              ))}
             </div>
+            <SpendingTrendChart transactions={data.summary.transactions} />
           </Card>
+
+          {/* ── Top Spending Merchants ─────────────────── */}
+          <Card>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h2 className="text-sm font-black text-gx-900">Top Merchants</h2>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Highest spend · ranked</p>
+              </div>
+            </div>
+            <TopSpendingWidget transactions={data.summary.transactions} />
+          </Card>
+
 
           {data.coach && (
             <section className="space-y-4">
-              <div className="flex items-center gap-2 px-1">
-                <div>
-                  <h3 className="text-sm font-black text-gx-900 uppercase tracking-widest">AI Behaviour Coach</h3>
-                  <p className="text-[10px] text-slate-500 font-bold">Personalized Financial Intelligence</p>
-                </div>
-              </div>
 
-              <div className="rounded-[2rem] bg-white border border-violet-100 p-5 shadow-sm relative overflow-hidden">
-                 <div className="flex items-center gap-2 mb-3">
-                    <BadgeCheck size={16} className="text-gx-600" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gx-600">Monthly AI Summary</span>
-                 </div>
-                 <p className="text-sm font-bold text-gx-900 leading-relaxed mb-4">
-                   "{data.coach.monthly_summary.insight}" 
-                   Your top category this month is <span className="text-gx-600 underline decoration-gx-200 underline-offset-4">{data.coach.monthly_summary.top_category}</span>.
-                 </p>
-                 <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
-                       <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Savings Performance</p>
-                       <p className="text-sm font-black text-emerald-600">{data.coach.monthly_summary.savings_performance}</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
-                       <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Total Spent</p>
-                       <p className="text-sm font-black text-gx-900">{money(data.coach.monthly_summary.total_spent)}</p>
-                    </div>
-                 </div>
+              <div className="rounded-2xl bg-white border border-violet-100 p-5 shadow-sm relative overflow-hidden">
+
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-sm font-black text-gx-900">AI Behaviour Coach</h2>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Personalized Financial Intelligence</p>
+                </div>
+                <div className="flex items-center gap-2 mb-3 pt-5">
+
+                  <BadgeCheck size={16} className="text-gx-600" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gx-600">Monthly AI Summary</span>
+                </div>
+                <p className="text-sm font-bold text-gx-900 leading-relaxed mb-4">
+                  "{data.coach.monthly_summary.insight}"
+                  Your top category this month is <span className="text-gx-600 underline decoration-gx-200 underline-offset-4">{data.coach.monthly_summary.top_category}</span>.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Savings Performance</p>
+                    <p className="text-sm font-black text-emerald-600">{data.coach.monthly_summary.savings_performance}</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Total Spent</p>
+                    <p className="text-sm font-black text-gx-900">{money(data.coach.monthly_summary.total_spent)}</p>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3">
@@ -256,55 +194,59 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
                 ))}
               </div>
 
-              <div className="rounded-[2rem] bg-gx-900 p-6 text-white shadow-xl shadow-gx-900/20 overflow-hidden relative">
-                 <div className="absolute -bottom-6 -right-6 opacity-10 pointer-events-none"><Coins size={100} /></div>
-                 <div className="relative z-10">
-                   <div className="flex items-center gap-2 mb-4"><RefreshCcw size={16} className="text-violet-300" /><span className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-300">Live Recommendations</span></div>
-                   <div className="mb-5">
-                      <p className="text-[10px] font-bold text-violet-400 uppercase mb-1">Safe Daily Limit</p>
-                      <p className="text-3xl font-black">{money(data.coach.prediction.daily_allowance)}<span className="text-sm font-medium text-violet-400">/day</span></p>
-                   </div>
-                   <ul className="space-y-3">
-                     {data.coach.recommendations.map((rec, i) => (
-                       <li key={i} className="flex items-start gap-2 text-[10px] font-medium text-violet-100 leading-normal"><div className="h-1.5 w-1.5 rounded-full bg-violet-400 mt-1 shrink-0" />{rec}</li>
-                     ))}
-                   </ul>
-                 </div>
+              <div className="rounded-2xl bg-gx-900 p-6 text-white shadow-xl shadow-gx-900/20 overflow-hidden relative">
+                <div className="absolute -bottom-6 -right-6 opacity-10 pointer-events-none"><Coins size={100} /></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-4"><RefreshCcw size={16} className="text-violet-300" /><span className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-300">Live Recommendations</span></div>
+                  <div className="mb-5">
+                    <p className="text-[10px] font-bold text-violet-400 uppercase mb-1">Safe Daily Limit</p>
+                    <p className="text-3xl font-black">{money(data.coach.prediction.daily_allowance)}<span className="text-sm font-medium text-violet-400">/day</span></p>
+                  </div>
+                  <ul className="space-y-3">
+                    {data.coach.recommendations.map((rec, i) => (
+                      <li key={i} className="flex items-start gap-2 text-[10px] font-medium text-violet-100 leading-normal"><div className="h-1.5 w-1.5 rounded-full bg-violet-400 mt-1 shrink-0" />{rec}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
               {data.coach.travel.is_active && (
-                <div className="rounded-[2rem] border border-blue-100 bg-white p-5 shadow-sm overflow-hidden relative">
-                   <div className="absolute top-0 right-0 p-4 opacity-5"><Globe size={60} /></div>
-                   <div className="flex items-center gap-2 mb-4"><div className="p-1.5 bg-blue-600 text-white rounded-lg"><Globe size={14} /></div><span className="text-[10px] font-black uppercase tracking-widest text-blue-600">Travel Mode Active</span></div>
-                   <div className="flex justify-between items-end mb-4">
-                      <div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5">Total Overseas (MYR)</p>
-                        <p className="text-xl font-black text-slate-900">{money(data.coach.travel.total_overseas_myr)}</p>
+                <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm overflow-hidden relative">
+                  <div className="absolute top-0 right-0 p-4 opacity-5"><Globe size={60} /></div>
+                  <div className="flex items-center gap-2 mb-4"><div className="p-1.5 bg-blue-600 text-white rounded-lg"><Globe size={14} /></div><span className="text-[10px] font-black uppercase tracking-widest text-blue-600">Travel Mode Active</span></div>
+                  <div className="flex justify-between items-end mb-4">
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5">Total Overseas (MYR)</p>
+                      <p className="text-xl font-black text-slate-900">{money(data.coach.travel.total_overseas_myr)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5">Active Currencies</p>
+                      <div className="flex gap-1 justify-end">
+                        {data.coach.travel.currencies.map(curr => (<span key={curr} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md font-bold text-[9px] border border-blue-100">{curr}</span>))}
                       </div>
-                      <div className="text-right">
-                        <p className="text-[9px] font-black text-slate-400 uppercase mb-0.5">Active Currencies</p>
-                        <div className="flex gap-1 justify-end">
-                          {data.coach.travel.currencies.map(curr => (<span key={curr} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md font-bold text-[9px] border border-blue-100">{curr}</span>))}
+                    </div>
+                  </div>
+                  <div className="space-y-2 pt-3 border-t border-slate-50">
+                    <div className="flex justify-between items-center text-[10px]"><span className="font-bold text-slate-500">Live FX Impact</span><span className="font-black text-blue-600">Low Volatility</span></div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {data.coach.travel.currencies.map(curr => (
+                        <div key={curr} className="flex justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
+                          <span className="font-black text-[9px] text-slate-400">1 {curr}</span>
+                          <span className="font-black text-[9px] text-slate-900">RM {data.coach.fx_rates[curr]?.toFixed(2)}</span>
                         </div>
-                      </div>
-                   </div>
-                   <div className="space-y-2 pt-3 border-t border-slate-50">
-                      <div className="flex justify-between items-center text-[10px]"><span className="font-bold text-slate-500">Live FX Impact</span><span className="font-black text-blue-600">Low Volatility</span></div>
-                      <div className="grid grid-cols-2 gap-2">
-                         {data.coach.travel.currencies.map(curr => (
-                           <div key={curr} className="flex justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
-                             <span className="font-black text-[9px] text-slate-400">1 {curr}</span>
-                             <span className="font-black text-[9px] text-slate-900">RM {data.coach.fx_rates[curr]?.toFixed(2)}</span>
-                           </div>
-                         ))}
-                      </div>
-                   </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </section>
           )}
 
-          <Card title="Spending Mix">
+          <Card>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-sm font-black text-gx-900">Spending Mix</h2>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Understand how your expenses are distributed</p>
+            </div>
             <SpendingPie breakdown={data.summary.category_breakdown} />
           </Card>
 
@@ -325,33 +267,6 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
             )}
           </Card>
 
-          <Card title="Active Loans">
-            <div className="mt-2 space-y-2">
-              {data.loans.map((loan) => (
-                <div key={loan.id} className="flex items-center gap-2.5 rounded-xl bg-slate-50 p-3">
-                  <Landmark className="text-gx-600 shrink-0" size={18} />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-sm truncate">{loan.name}</p>
-                    <p className="text-[10px] text-slate-500 truncate">{money(loan.outstanding)} · {loan.remaining_months}mo left</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card title="Savings Goals">
-            <div className="absolute top-3 right-3"><button onClick={() => setIsAddingGoal(true)} className="p-1.5 rounded-lg text-gx-600 hover:bg-violet-50 transition active:scale-90"><Plus size={16} /></button></div>
-            <div className="mt-2 space-y-2">
-              {data.goals.map((goal) => (
-                <div key={goal.id} className="rounded-xl bg-violet-50 p-3 group relative cursor-pointer active:bg-violet-100 transition" onClick={() => { setEditingGoal(goal); setEditGoalName(goal.name); setEditGoalTarget(goal.target_amount); }}>
-                  <div className="flex items-center gap-2 font-bold text-sm"><Goal size={15} /><span className="truncate">{goal.name}</span></div>
-                  <div className="mt-1.5 h-1.5 rounded-full bg-white"><div className="h-1.5 rounded-full bg-gx-500" style={{ width: `${Math.min((goal.current_amount / goal.target_amount) * 100, 100)}%` }} /></div>
-                  <p className="mt-1 text-[10px] text-slate-600">{money(goal.current_amount)} / {money(goal.target_amount)}</p>
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-[10px] font-bold text-gx-600 bg-white/60 px-2 rounded">Edit</div>
-                </div>
-              ))}
-            </div>
-          </Card>
 
           <Card title="Smart Automations">
             <div className="mt-2 space-y-2">
@@ -446,33 +361,6 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
         </div>
       )}
 
-      {editingGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-gx-900 mb-4">Edit Goal</h3>
-            <div className="space-y-4">
-              <div><label className="text-xs font-semibold text-slate-500">Goal Name</label><input type="text" value={editGoalName} onChange={e => setEditGoalName(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none" /></div>
-              <div><label className="text-xs font-semibold text-slate-500">Target Amount (RM)</label><input type="number" value={editGoalTarget} onChange={e => setEditGoalTarget(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none" /></div>
-              <div className="mt-6 flex gap-2"><button onClick={() => setEditingGoal(null)} className="flex-[2] rounded-lg bg-slate-100 py-3 font-bold text-slate-600">Cancel</button><button onClick={handleDeleteGoal} className="flex-[1] rounded-lg bg-red-50 py-3 font-bold text-red-600">Delete</button><button onClick={handleUpdateGoal} className="flex-[2] rounded-lg bg-gx-500 py-3 font-bold text-white shadow-md shadow-gx-500/20">Save</button></div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isAddingGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 animate-in fade-in">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-gx-900 mb-4">Create New Goal</h3>
-            <div className="space-y-4">
-              <div><label className="text-xs font-semibold text-slate-500">Goal Name</label><input type="text" value={addGoalName} onChange={e => setAddGoalName(e.target.value)} placeholder="e.g., Vacation Fund" className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none" /></div>
-              <div><label className="text-xs font-semibold text-slate-500">Target Amount (RM)</label><input type="number" value={addGoalTarget} onChange={e => setAddGoalTarget(e.target.value)} placeholder="0.00" className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none" /></div>
-              <div><label className="text-xs font-semibold text-slate-500">Optional Deadline (Date)</label><input type="date" value={addGoalDate} onChange={e => setAddGoalDate(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none" /></div>
-              <div><label className="text-xs font-semibold text-slate-500">Category</label><select value={addGoalCategory} onChange={e => setAddGoalCategory(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 p-2 focus:border-gx-500 focus:outline-none bg-white"><option value="General">General</option><option value="Travel">Travel</option><option value="Emergency">Emergency</option><option value="Education">Education</option><option value="Property">Property</option><option value="Other">Other</option></select></div>
-              <div className="mt-6 flex gap-2"><button onClick={() => setIsAddingGoal(false)} className="flex-1 rounded-lg bg-slate-100 py-3 font-bold text-slate-600">Cancel</button><button onClick={handleCreateGoal} className="flex-1 rounded-lg bg-gx-500 py-3 font-bold text-white shadow-md shadow-gx-500/20">Create Goal</button></div>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

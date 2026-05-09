@@ -1,4 +1,4 @@
-import { Battery, Signal, Wifi } from "lucide-react";
+import { BatteryMedium, Signal, Wifi } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function StatusBar({ variant = "dark" }) {
@@ -37,7 +37,7 @@ export default function StatusBar({ variant = "dark" }) {
       <div className={`flex flex-1 items-center justify-end gap-2 ${isLight ? "text-black" : "text-gx-900"}`}>
         <Signal size={14} strokeWidth={2.5} />
         <Wifi size={14} strokeWidth={2.5} />
-        <Battery size={16} strokeWidth={2.5} />
+        <BatteryMedium size={16} strokeWidth={2.5} />
       </div>
     </div>
   );
