@@ -110,7 +110,6 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
           </div>
           <div className="mt-4 flex gap-2">
             <button onClick={() => setMapMode(!mapMode)} className={`flex-1 flex items-center justify-center gap-1.5 rounded-2xl px-3 py-2.5 text-[11px] font-bold transition-all active:scale-95 ${mapMode ? "bg-red-500 text-white" : "bg-white/12 text-white border border-white/15"}`}><MapPin size={13} /> {mapMode ? "Exit Map" : "Map"}</button>
-            <button onClick={handleResetData} className="flex-1 rounded-2xl border border-white/15 bg-white/10 px-3 py-2.5 text-[11px] font-bold text-white/85 active:scale-95">Reset Data</button>
           </div>
         </div>
       </section>
@@ -200,7 +199,6 @@ export default function Dashboard({ data, onDemoSalary, onDemoOverspend, demoRes
               </div>
 
               <div className="rounded-2xl bg-gx-900 p-6 text-white shadow-xl shadow-gx-900/20 overflow-hidden relative">
-                <div className="absolute -bottom-6 -right-6 opacity-10 pointer-events-none"><Coins size={100} /></div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-4"><RefreshCcw size={16} className="text-violet-300" /><span className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-300">Live Recommendations</span></div>
                   <div className="mb-5">

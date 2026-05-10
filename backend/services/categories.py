@@ -1,5 +1,5 @@
 """
-FINMATE OS — Hierarchical Category Taxonomy
+Finova OS — Hierarchical Category Taxonomy
 Level 1: main_category
 Level 2: sub_category
 Level 3: behavioral_tag

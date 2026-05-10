@@ -207,7 +207,6 @@ export function BehavioralInsights({ insights = [], tagCounts = {} }) {
 const RANGE_OPTIONS = [
   { key: "W", label: "Week", days: 7 },
   { key: "M", label: "Month", days: 30 },
-  { key: "3M", label: "3 Months", days: 90 },
   { key: "Y", label: "Year", days: 365 },
 ];
 
@@ -216,7 +215,6 @@ function bucketDate(dateStr, days) {
   if (isNaN(d)) return null;
   if (days <= 7) return d.toLocaleDateString("en-MY", { weekday: "short" });
   if (days <= 30) return d.toLocaleDateString("en-MY", { day: "2-digit", month: "short" });
-  if (days <= 90) return d.toLocaleDateString("en-MY", { day: "2-digit", month: "short" });
   return d.toLocaleDateString("en-MY", { month: "short", year: "2-digit" });
 }
 

@@ -18,7 +18,7 @@ export default function AuthPage({ onAuth }) {
   }
 
   return (
-    <main className="flex h-full flex-col bg-[#f7f4ff] px-7 py-20">
+    <main className="flex h-full flex-col justify-center bg-[#f7f4ff] px-7 pb-10">
       <section className="mb-10">
         <div className="mb-10 flex items-center justify-between">
           <div className="rounded-full border border-violet-200 bg-white/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-gx-600">

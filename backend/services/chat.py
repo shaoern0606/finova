@@ -27,7 +27,7 @@ def llama_style_response(message, context, history=None):
     history_str = "\n".join([f"{h['role'].upper()}: {h['text']}" for h in history[-6:]])
 
     prompt = f"""
-You are Nova, a professional financial advisor AI for FINMATE OS.
+You are Nova, a professional financial advisor AI for Finova OS.
 
 Your role:
 - Give clear, statistical financial advice using percentages, ratios, and projections.

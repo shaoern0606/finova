@@ -20,7 +20,7 @@ const money = (value) => {
 export default function App() {
   const [session, setSession] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("finmate_session") || "null");
+      return JSON.parse(localStorage.getItem("finova_session") || "null");
     } catch {
       return null;
     }
@@ -47,7 +47,7 @@ export default function App() {
       const recs = await post("/nearby-merchants", payload);
       setData(prev => prev ? { ...prev, recommendations: recs } : prev);
     } catch (e) {
-      console.error("[FinMate] Failed to load nearby merchants", e);
+      console.error("[Finova] Failed to load nearby merchants", e);
     }
   }, []);
 
@@ -75,7 +75,7 @@ export default function App() {
   }, [fetchMerchants]);
 
   const onGpsError = useCallback((err) => {
-    console.warn("[FinMate] GPS denied or unavailable:", err.message);
+    console.warn("[Finova] GPS denied or unavailable:", err.message);
     setLocationStatus("denied");
   }, []);
 
@@ -115,12 +115,12 @@ export default function App() {
   }, [session]);
 
   function handleAuth(nextSession) {
-    localStorage.setItem("finmate_session", JSON.stringify(nextSession));
+    localStorage.setItem("finova_session", JSON.stringify(nextSession));
     setSession(nextSession);
   }
 
   function signOut() {
-    localStorage.removeItem("finmate_session");
+    localStorage.removeItem("finova_session");
     setSession(null);
     setPage("dashboard");
   }

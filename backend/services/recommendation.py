@@ -1,5 +1,5 @@
 """
-FINMATE OS — Merchant Recommendation Engine
+Finova OS — Merchant Recommendation Engine
 Merchants are stored as (direction_deg, distance_km) offsets from a reference center.
 At query time, each merchant's real lat/lng is computed from the USER's actual GPS position.
 This guarantees natural spatial spread in all directions around the real user location.
@@ -66,7 +66,7 @@ def fetch_real_places(lat, lng, radius=3000):
     out 200;
     """
     try:
-        headers = {"User-Agent": "FinMateOS/1.0"}
+        headers = {"User-Agent": "FinovaOS/1.0"}
         resp = requests.post("https://overpass-api.de/api/interpreter", data={'data': query}, headers=headers, timeout=15)
         print(f"[DEBUG] Overpass API Status: {resp.status_code}")
         if resp.status_code != 200:

@@ -23,7 +23,7 @@ from services.transactions import combined_balance, receipt_ai_analysis, spendin
 from services.ocr import extract_receipt_data, save_transaction_from_receipt
 
 
-app = FastAPI(title="FINMATE OS - FinScope Edition", version="1.0.0")
+app = FastAPI(title="Finova OS", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -89,7 +89,7 @@ def intelligence_snapshot():
 
 @app.get("/")
 def root():
-    return {"name": "FINMATE OS (FinScope Edition)", "status": "online"}
+    return {"name": "Finova OS", "status": "online"}
 
 
 @app.get("/data/bank")

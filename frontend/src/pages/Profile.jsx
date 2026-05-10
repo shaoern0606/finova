@@ -109,7 +109,7 @@ export default function Profile({ onSignOut }) {
         </div>
         <div className="text-center">
           <p className="text-base font-bold text-slate-800">Aina Tan</p>
-          <p className="text-xs text-slate-400">@ainatan510 · FinMate Member</p>
+          <p className="text-xs text-slate-400">@ainatan510 · Finova Member</p>
         </div>
       </div>
 
@@ -203,7 +203,7 @@ export default function Profile({ onSignOut }) {
         />
         <Row
           icon={Info}
-          label="About FinMate"
+          label="About Finova"
           sublabel="Version 1.0.0"
           right={<span className="text-[11px] text-slate-400">›</span>}
         />
