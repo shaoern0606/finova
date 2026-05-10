@@ -4,3 +4,4 @@ google-generativeai
 pydantic
 python-dotenv
 Pillow==10.4.0
+python-multipart
