@@ -1,113 +1,126 @@
 # 🌌 Finova
-**The Intelligent Financial Operating System**
+## The Intelligent Financial Operating System  
 
-Finova is a next-generation personal finance platform designed to transform raw transaction data into actionable behavioral intelligence. Built with a "premium-first" neo-minimalist aesthetic, it combines real-time graph analytics, AI-powered coaching, and predictive simulations to give users total mastery over their money.
+> **“AI that understands your money before problems happen.”**
+
+Finova is a **real-time financial intelligence platform** that transforms raw transactions into behavioral insights, predictive analytics, and proactive financial guidance. Unlike traditional banking apps that only show *what* you spent, Finova explains **why** you spent it and **what it means** for your financial future.
 
 ---
 
-## 📖 Project Overview
-Finova is not just a tracker; it's a financial co-pilot. While traditional banking apps focus on historical logs, Finova focuses on **future outcomes** and **behavioral patterns**. By analyzing the "why" behind your spending, it helps you break bad habits and reach your goals faster through a unified, high-fidelity intelligence layer.
+## ⚡ Core Value Proposition
+Finova turns fragmented financial data into a unified, intelligent decision system:
+
+*   🧠 **Behavioral Analysis**: Decodes the "why" behind every transaction.
+*   📊 **Real-time Patterns**: Detects anomalies and lifestyle shifts as they happen.
+*   🔮 **Predictive Engine**: Forecasts cash flow risks before they become bottlenecks.
+*   💡 **Contextual Guidance**: Provides personalized interventions to drive better money decisions.
+
+---
 
 ## ⚠️ Problem Statement
-Modern consumers face "Financial Noise"—a constant stream of digital transactions that makes it difficult to:
-1.  **Understand Patterns**: Users often don't realize they spend 40% more on weekends or are "delivery-dependent."
-2.  **Predict Impact**: It's hard to visualize how a single luxury purchase today affects your ability to pay for a home in 2 years.
-3.  **Manage Global Spending**: Frequent travelers struggle to track real-time FX impact and localized spending habits.
-4.  **Actionable Advice**: Generic "save more" advice fails to address individual behavioral biases.
-
-## 💡 The Solution: Finova Intelligence
-Finova introduces an intelligent layer between you and your bank. It uses a **Financial Graph** to map relationships between income, expenses, and goals, providing:
-*   **Behavioral Economics**: Identifies specific spending archetypes (e.g., "The Impulse Shopper").
-*   **Predictive Simulations**: A "What-If" lab to test major purchases before they happen.
-*   **Live AI Coaching**: A context-aware advisor (Nova) that knows your habits better than you do.
+Modern users are overwhelmed by "financial noise"—too many transactions with zero clarity.
+*   **Invisible Patterns**: Spending archetypes (weekend spikes, impulse buys) go unnoticed.
+*   **Reactive Management**: Overspending is usually detected only *after* the balance is low.
+*   **Static Advice**: Generic "save more" tips fail to address individual behavioral biases.
+*   **Future Disconnect**: Difficulty visualizing how current decisions impact long-term resilience.
 
 ---
 
-## ✨ Key Features
+## 💡 Solution
+
+Finova introduces an AI intelligence layer that transforms financial data into meaningful guidance.
+It:
+- Analyses user behaviour patterns  
+- Predicts financial risks before they happen  
+- Provides real-time spending feedback  
+- Offers personalised financial recommendations  
+
+Finova acts as a financial co-pilot that helps users make better decisions **before money is spent, not after**.
+
+---
+
+## ✨ Key Intelligence Modules
 
 ### 🧠 AI Behaviour Coach
-*   **Pattern Recognition**: Detects "Weekend Spikes," "Salary Day Dependency," and "Subscription Bloat."
-*   **Safe Daily Limit**: Dynamically calculates your safe spending pace based on your balance and goals.
-*   **Travel Mode**: Automatic detection of overseas spending with live FX conversion and localized impact analysis.
+*   Detects spending habits (weekend spikes, salary-day effects, impulse cycles).
+*   Identifies lifestyle shifts and evolving spending patterns.
+*   Calculates dynamic **Safe Daily Spending Limits** based on goals.
+*   Provides personalized financial insights and nudges.
+
+### 🔮 Predictive Engine
+*   Forecasts low-balance risk periods and cash flow gaps.
+*   Estimates real-time monthly savings potential.
+*   Simulates financial outcomes based on historical behavior.
+*   Early-warning system for upcoming liquidity issues.
 
 ### 🧪 Simulation Lab
-*   **Overspending Interventions**: Test "What If" scenarios and see how it affects your net worth in 6 months.
-*   **Salary Automation**: Visualizes the 50/30/20 rule application as soon as your paycheck hits.
+*   **What-If Testing**: Forecast the long-term impact of any purchase.
+*   **Salary Optimizer**: Automated allocation modeling (50/30/20 rule).
+*   **Goal Forecasting**: Predicts achievement dates based on current velocity.
+
+### 🌍 Travel & FX Intelligence
+*   Automatic detection of overseas spending with live FX awareness.
+*   Real-time conversion to base currency (RM) with impact monitoring.
+*   Separates travel behavior from daily domestic spending for cleaner stats.
 
 ### 📍 Smart Map Intelligence
-*   **Geo-Fenced Savings**: Discover cost-saving merchant alternatives near your current location.
-*   **Contextual Recommendations**: AI-driven suggestions for dining, transport, and shopping based on your historical behavior.
-
-### 📊 Intelligence Cockpit
-*   **Financial Graph**: A unified view of Assets, Net Worth, Liabilities, and Investments.
-*   **Spending Trends**: Interactive Area charts and Top-Merchant widgets to visualize your lifestyle inflation.
-*   **Savings Goals**: Progress tracking for multiple financial milestones with auto-allocation from income.
+*   Suggests cost-saving nearby merchant alternatives.
+*   Provides location-based financial recommendations and rewards.
+*   Context-aware spending suggestions based on current geofence.
 
 ---
 
 ## 🛠️ Tech Stack
 
-*   **Frontend**: React (Vite), Tailwind CSS, Recharts (Data Viz), Lucide React (Icons).
-*   **Backend**: FastAPI (Python), Rule-based AI Engine, Behavioral Economics Heuristics.
-*   **Intelligence**: Simulated Graph Data Model, OCR Receipt Processing, Google Gemini API.
+| Component | Technologies |
+| :--- | :--- |
+| **Frontend** | React (Vite), Tailwind CSS, Recharts, Lucide React |
+| **Backend** | FastAPI (Python), Rule-based AI Engine |
+| **Intelligence** | Financial Graph Modeling, Predictive Heuristics, Gemini API |
+| **Operations** | Python 3.9+, Node.js 18+, Uvicorn |
 
 ---
 
-## 🚀 Setup Requirements
+## 🚀 Getting Started
 
-### Prerequisites
-*   **Python 3.9+**
-*   **Node.js 18+**
-*   **Google Gemini API Key**
-
-### 1. Clone & Install Dependencies
+### 1. Environment Setup
+Clone the repository and ensure you have the required runtimes installed.
 ```bash
-# Backend
+git clone https://github.com/your-repo/finova.git
+cd finova
+```
+
+### 2. Dependency Installation
+```bash
+# Backend Setup
 cd backend
 pip install -r requirements.txt
 
-# Frontend
-cd frontend
+# Frontend Setup
+cd ../frontend
 npm install
 ```
 
-### 2. .env File Instruction
-Create a `.env` file in the `backend/` directory with the following variables:
+### 3. Configuration
+Create a `.env` file in the `backend/` directory:
 ```env
 GOOGLE_API_KEY=your_gemini_api_key_here
 ```
 
-### 3. Running the Project
+### 4. Running the Project
 ```bash
-# Start Backend
-cd backend
+# Terminal 1: Backend
 uvicorn main:app --reload
 
-# Start Frontend
-cd frontend
+# Terminal 2: Frontend
 npm run dev
 ```
 
 ---
 
-## 📂 Project Structure
-```text
-├── backend/
-│   ├── services/      # AI Coach, Peer Analytics, FX Engine, OCR
-│   ├── main.py        # FastAPI Endpoints & App Initialization
-│   └── data.py        # Seed Transactions, Goals, & Graph Nodes
-├── frontend/
-│   ├── src/
-│   │   ├── pages/     # Dashboard, Simulation, Investments, Scanner
-│   │   ├── components/# SmartMap, Charts, StatusBar, ScoreRing
-│   │   └── App.jsx    # Main Layout & Navigation Logic
-```
-
----
-
-## 🗺️ Future Roadmap
-- [ ] **Multi-Bank Sync**: Direct API integration with major banks (Open Banking).
-- [ ] **Shared Goals**: Collaborative savings goals for couples or families.
-- [ ] **Crypto Insights**: Integration of digital asset portfolios into the Financial Graph.
-- [ ] **AI Voice Assistant**: Hands-free financial coaching via voice commands.
-- [ ] **Smart Budgeting 2.0**: Auto-adjusting budget limits based on daily market volatility.
+## 🗺️ Roadmap
+- [ ] **Phase 1**: Multi-bank integration (Open Banking API).
+- [ ] **Phase 2**: Collaborative savings goals for families/couples.
+- [ ] **Phase 3**: AI Voice Intervention for impulse purchase prevention.
+- [ ] **Phase 4**: Machine learning-based lifestyle inflation detection.
+- [ ] **Phase 5**: Anomaly detection and fraud risk intelligence.
