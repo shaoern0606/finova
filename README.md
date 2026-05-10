@@ -86,7 +86,7 @@ Finova acts as a financial co-pilot that helps users make better decisions **bef
 ### 1. Environment Setup
 Clone the repository and ensure you have the required runtimes installed.
 ```bash
-git clone https://github.com/your-repo/finova.git
+git clone https://github.com/shaoern0606/finova.git
 cd finova
 ```
 
