@@ -74,10 +74,17 @@ Finova acts as a financial co-pilot that helps users make better decisions **bef
 
 | Component | Technologies |
 | :--- | :--- |
-| **Frontend** | React (Vite), Tailwind CSS, Recharts, Lucide React |
-| **Backend** | FastAPI (Python), Rule-based AI Engine |
-| **Intelligence** | Financial Graph Modeling, Predictive Heuristics, Gemini API |
-| **Operations** | Python 3.9+, Node.js 18+, Uvicorn |
+| **Frontend** | React (Vite), Tailwind CSS, Recharts, Framer Motion |
+| **Backend** | FastAPI (Python), Uvicorn, Pydantic |
+| **Intelligence** | Gemini API, Financial Graph Modeling, Behavioural Heuristics, Predictive Engine |
+| **Tools & Runtime** | Python 3.9+, Node.js 18+, ## 🛠️ Tech Stack
+
+| Component | Technologies |
+| :--- | :--- |
+| **Frontend** | React (Vite), Tailwind CSS, Recharts, Framer Motion |
+| **Backend** | FastAPI (Python), Uvicorn, Pydantic |
+| **Intelligence** | Gemini API, Financial Graph Modeling, Behavioural Heuristics, Predictive Engine |
+| **Tools & Runtime** | Python 3.9+, Node.js 18+ |
 
 ---
 
