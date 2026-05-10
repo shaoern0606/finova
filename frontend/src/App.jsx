@@ -101,7 +101,7 @@ export default function App() {
   useEffect(() => {
     if (!session) return;
     loadDashboard().catch(() =>
-      setDemoResult("Backend is not reachable yet. Start FastAPI on http://localhost:8000.")
+      setDemoResult("Backend is not reachable yet. Start FastAPI on http://.")
     );
     startGpsWatch();
 
