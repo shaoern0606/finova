@@ -13,7 +13,7 @@ Finova is a **real-time financial intelligence platform** that transforms raw tr
 
 ## 🎥 Demo Video
 
-📺 Watch Here: https://drive.google.com/drive/folders/1j8a5iGf8mfqj6SVglcxtTEgSWmjwS5b8?usp=sharing
+📺 Watch Here: https://drive.google.com/file/d/1FiYADWIjKdCY531PdyaKEBIMdLeoZrq7/view?usp=sharing
 
 ---
 
