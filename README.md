@@ -7,6 +7,16 @@ Finova is a **real-time financial intelligence platform** that transforms raw tr
 
 ---
 
+## 🚀 Live Prototype
+
+🔗 Prototype Demo: https://finova2.vercel.app/ 
+
+## 🎥 Demo Video
+
+📺 Watch Here: https://drive.google.com/drive/folders/1j8a5iGf8mfqj6SVglcxtTEgSWmjwS5b8?usp=sharing
+
+---
+
 ## ⚡ Core Value Proposition
 Finova turns fragmented financial data into a unified, intelligent decision system:
 
